@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.3
+# v0.20.18
 
 using Markdown
 using InteractiveUtils
@@ -7,7 +7,7 @@ using InteractiveUtils
 # This Pluto notebook uses @bind for interactivity. When running this notebook outside of Pluto, the following 'mock version' of @bind gives bound variables a default value (instead of an error).
 macro bind(def, element)
     #! format: off
-    quote
+    return quote
         local iv = try Base.loaded_modules[Base.PkgId(Base.UUID("6e696c72-6542-2067-7265-42206c756150"), "AbstractPlutoDingetjes")].Bonds.initial_value catch; b -> missing; end
         local el = $(esc(element))
         global $(esc(def)) = Core.applicable(Base.get, el) ? Base.get(el) : iv(el)
@@ -36,12 +36,19 @@ md"""
 
 O objetivo de deste notebook é realizar experimentos computacionais, utilizando a linguagem de programação Julia, que possam auxiliar no entendimento da tanto da teoria envolvida na prática de laboratório quanto de alguns aspectos propriamente experimentais.
 
+Além disso, está sendo utilizado o Pluto, uma plataforma de notebooks que permite que se intercale texto e código em caixas separadas, produzindo uma espécie de PDF com trechos executáveis de código.
+
 Para saber mais sobre [Julia](https://julialang.org/) e os [Pluto](https://plutojl.org/) noteboks, basta clicar nos links.
 
 """
 
-# ╔═╡ 0fe629eb-a88e-4f4e-bb29-960930a99e81
-plotly()
+# ╔═╡ 69842401-4076-411a-8944-4e4315d07394
+md"""
+!!! tip "Pacotes em Julia"
+	- De forma similar à linguagem de programaçao Python, Julia possui diversos pacotes pré-prontos
+	- Esses pacotes são importados para o ambiente de execução utilizando o comando "import" e declara-se seu uso em um determinado arquivo através do comando "using".
+	- Além disso, o Pluto especificamente foi desenvolvido priorizando a execução de um comando por célula. Para executar mais de um comando, utiliza-se "begin" e "end".
+"""
 
 # ╔═╡ cf87a9d2-4e8d-48c7-b8cc-0bbdb9c6eb86
 TableOfContents()
@@ -77,7 +84,7 @@ v = 0:20
 i = 1 / R * v
 
 # ╔═╡ 87f49394-a621-4e37-b42f-3fd4f5434b69
-Plots.plot(v, i, gridalpha=0.8, lw=2.0, xlabel="Tensão aplicada (V)", ylabel="Corrente resultante (A)", xlims=[0.0, 20.0], ylims=[0.0, 0.2], legend=false)
+plot(v, i, gridalpha=0.8, lw=2.0, xlabel="Tensão aplicada (V)", ylabel="Corrente resultante (A)", xlims=[0.0, 20.0], ylims=[0.0, 0.2], legend=false)
 
 # ╔═╡ 7757dbb2-b92d-4776-b184-d14288fa84ba
 md"""
@@ -118,61 +125,63 @@ md"""
 
 # ╔═╡ 686e734e-a36a-4536-ab54-453af1e01abf
 md"""
-For an incandescent lamp, **its key characteristic is that the resistance increases as the filament warms up**.
+A principal característica de uma lâmpada incandescente é que sua resistência aumenta conforme o filamento esquenta
 
-Under the simplifying assumption that:
+Assumindo, para simplificar, que:
 
-> The rate of heat loss from the filament is proportional to temperature difference to ambient.
+> A taxa de perda de calor do filamento é proporcional à diferença de temperatura em comparação com o ambiente.
 
-The temperature of the filament is governed by:
 
-$$k \cdot tc \cdot \frac{dT}{dt} = i^2 R − k \cdot T$$
+A temperatura do filamento é dada por:
 
-And the filament resistance is governed by the following equation:
 
-$$R = R_0 \cdot ( 1 + \alpha \cdot T)$$
+$k\cdot tc\cdot \frac{dT}{dt}=i^{2}R - k \cdot T$
 
-Where:
+E a resistência do filamento é dada por:
 
-- The parameter $R_0$ is the initial resistance at turn-on (when filament is at ambient temperature).
-- The parameter $T$ is the filament temperature relative to ambient temperature.
-- The parameter $\alpha$ is the resistance temperature coefficient.
-- The parameter $tc$ is the thermal time constant.
-- The parameter $k$ is the heat transfer coefficient.
-- The parameter $R$ is the filament resistance.
-- The parameter $i$ is the filament current.
+$R = R_{0} \cdot (1+\alpha \cdot T)$
 
-Para mais informações acesse: [Incandescent Lamp](https://www.mathworks.com/help/sps/ref/incandescentlamp.html)
+Onde
 
+
+*   $R_{0}$ é a resistência inicial (em temperatura ambiente)
+*   $T$ é a temperatura do filamento relativo à temperatura do ambiente
+*   $\alpha$ é o coeficiente do filamento que relaciona temperatura e resistência
+*   $tc$ é a constante de tempo térmica, ou o tempo que o filamento leva para atingir 63,2% da diferença entre a temperatura inicial e a final quando submetido a um degrau de tensão (Para mais informações, leia o [artigo](https://www.mmc.co.jp/adv/en/solution/thermistor/thermistor08.html))
+*   $k$ é o coeficiente de transferência de calor
+*   $R$ é a resistência do filamento
+*   $i$ é a corrente no filamento
+
+Para mais informações acesse [Lâmpada Incandescente](https://www.mathworks.com/help/sps/ref/incandescentlamp.html)"""
+
+# ╔═╡ ab137b79-8284-4358-b37f-ffcda39c35eb
+md"""
+### Modelo de resistência variável sem EDO
 """
 
 # ╔═╡ 36ccc5b5-b338-4f4d-ac86-e2c1ea4826d7
 md"""
 
-### Modelo de resistência variável sem EDO 
-
-
 Agora, desconsiderando a dinâmica temporal do processo de variação de temperatura da lâmpada, as equações acima se resumem à:
 
-$$R \cdot i^2 = k \cdot T$$
+$R \cdot i^{2} = k \cdot T$
 
-And the filament resistance is governed by the following equation:
+E a resistência do filamento é dada por:
 
-$$R = R_0 \cdot ( 1 + \alpha \cdot T)$$
+$R = R_{0} \cdot (1+\alpha \cdot T)$
 
-Sabendo que $R \cdot i^2 = v^2 / R$, tem-se:
+Sabendo que $R \cdot i^{2} = v^{2}/R$ tem-se:
 
-$$v^2 / R = k \cdot T$$
+$v^{2}/R= k \cdot T$
 
-Substituindo a expressão de resitência na expressão acima e organizand os termos em função de $T$, obtém-se:
+Substituindo a expressão de resitência na expressão acima e organizand os termos em função de $T$ obtém-se:
 
-$$k \cdot R_0 \cdot T + k \cdot \alpha \cdot R_0 \cdot T^2 - V^2 = 0$$
-
+$k \cdot R_{0} \cdot T + k \cdot \alpha \cdot R_{0} \cdot T^{2} - v^{2} = 0$
 """
 
 # ╔═╡ 877070f5-869a-45f0-8cd6-252d849b155d
 md"""
-Definição de Parâmetros:
+Para gerar a curva correspondente, começamos definindo os parâmetros:
 """
 
 # ╔═╡ fb1a1e06-d947-4959-ba11-0f926b6d7bb9
@@ -185,7 +194,7 @@ end
 
 # ╔═╡ 82b866a0-8e91-4dde-b116-05337fd36ac0
 md"""
-Resolução da equação quadrática para cada valor de tensão:
+O próximo passo é a resolução da equação quadrática para cada valor de tensão:
 """
 
 # ╔═╡ eeaebad5-d8e7-4a9d-ac42-c564b7617480
@@ -208,55 +217,29 @@ Rₖ # variação de resitância para diferentes valores de temperatura
 iₖ = 1.0 ./ Rₖ .* V # variação de corrente para diferentes valores de temperatura
 
 # ╔═╡ 59119392-0803-4e74-8902-d125881ac97a
-Plots.plot(V, iₖ, gridalpha=0.8, lw=2.0, xlabel="Tensão aplicada (V)", ylabel="Corrente resultante (A)")
-
-# ╔═╡ 6eb3db1e-c025-4286-a4ce-1c012112d8ef
-
+plot(V, iₖ, gridalpha=0.8, lw=2.0, xlabel="Tensão aplicada (V)", ylabel="Corrente resultante (A)")
 
 # ╔═╡ 8723b580-4a24-41ff-8afe-7bf2f261a7f3
 md"""
 ## Resistores em Série (Divisor de Tensão)
 """
 
-# ╔═╡ 9e4fa789-c9c6-429d-acf0-7aaad445c47d
-md"""
-Aplicando a Lei de Kirchoff da Tensão é possível desenvolver expressões para o cálculo da tensão aplicada em um componente em série com outros unicamente em função dos valores de:
-- Tensão total aplicada,
-- Resistência do elemento em questão, e
-- Resistência equivalente do conjunto.
-
-$$V_1 = \frac{R_1}{R_{eq}} \cdot V_{total}$$
-
-"""
-
-# ╔═╡ 8aa520ca-78f1-4398-8cb3-c125ba62b6fb
-md"""
-Como forma de verificar essa propriedade vamos analisar inicialmente um conjunto de **três resistores em série**, dos quais:
-- dois permanecerão fixos, e 
-- um poderá ser variado.
-
-Estes resistores estarão submetidos à aplicação de uma **tensão fixa**.
-"""
-
 # ╔═╡ cbdd9cf2-a276-4ebd-b9e2-d7864205e5e7
 begin
-	R₁ = 10.0
-	R₂ = 100.0
-	print("")
+	R₁ = 300.0
+	R₂ = 1.5e3
 end
 
-# ╔═╡ fcf5c3a7-d6a5-4e02-8930-8f8521df5390
-md"""
-Resistência resultante de um circuito série:
-
-$$R_s = \sum_{i=1}^{N} R_i$$
-
-"""
+# ╔═╡ 2cc848ab-4c0c-457e-884b-eeeb0385a402
+@bind R₃ Slider(100:50:600)
 
 # ╔═╡ 50da36dd-665a-4531-9066-1bfac13dbd2f
 md"""
-Tensão fixa aplicada no circuito:
+Tensão Aplicada no Circuito:
 """
+
+# ╔═╡ 6daf5d7a-1211-4677-bddd-55a39bdf7f62
+Rₛ = R₁ + R₂ + R₃
 
 # ╔═╡ 2102a0e9-a073-44a4-9303-63bb1ccdf840
 Vₛ = 20.0
@@ -265,15 +248,6 @@ Vₛ = 20.0
 md"""
 Corrente Resultante:
 """
-
-# ╔═╡ 2cc848ab-4c0c-457e-884b-eeeb0385a402
-@bind R₃ Slider(10:1:100)
-
-# ╔═╡ c8646237-2fe5-4e2b-9f96-bf059174e914
-R₃
-
-# ╔═╡ 6daf5d7a-1211-4677-bddd-55a39bdf7f62
-Rₛ = R₁ + R₂ + R₃
 
 # ╔═╡ dd3943a0-0e15-4fd5-83ec-65e09dcdd261
 Iₛ = Vₛ / Rₛ
@@ -294,135 +268,20 @@ V₃ = Vₛ * R₃ / Rₛ
 
 # ╔═╡ caf9a932-4a1f-477b-b484-e0c482a83915
 md"""
-Observe como as tensões variam em cada resistor conforme a variação do valor de resistência do resistor $R_3$.
-
-No entanto a soma das tensões em cada um deles que é a tensão total no circuito, **permanece constante**, conforme estabalece a Lei de Kirchoff das Tensões.
-
-$$\sum_{i=1}^{N} \Delta V_i = 0$$
-
 Somatório das tensões nos resistores:
 """
 
 # ╔═╡ 7819f3a5-9238-40f1-ade3-ab31e3855f98
 V₁ + V₂ + V₃
 
-# ╔═╡ af1fa27a-38cc-4873-a8de-a1b11fe1cda0
-md"""
-!!! note "Questionamento"
-	Qual a tendência de comportamento dos valores de tensão para uma variação constante no valor de resistência do resistor $R_3$?
-
-Resposta:
-
-De acordo com a equação:
-
-$$V_3(R_3) = \frac{R_3}{(R_1 + R_2) + R_3} \cdot V_s$$
-
-De forma genérica:
-
-$$f(x) = \frac{b \cdot x}{a + x}$$
-
-"""
-
-# ╔═╡ 1a31c834-70d3-4714-84c5-9a5790dbe99e
-let
-	# cálculo da tensão no resistor R3 para diferentes valores de resitência
-	function v3(r3, vs=20.0)
-		r1 = 100.0
-		r2 = 10.0
-
-		# r1 = 0.0
-		# r2 = 0.0
-
-		# r1 = 1.0
-		# r2 = 1.0
-		
-		# r1 = 1e3
-		# r2 = 1e3
-		
-		rs = r1 + r2 + r3
-		return vs * r3 / rs
-	end
-
-	r3 = 10.0:100.0
-	r3_ = 10.0:10.0:100.0
-	
-	# Plotagem
-	Plots.plot(r3, v3.(r3), lw=2.0, gridalpha=0.5, yticks=1:10, xticks=10:10:100, xlabel="Resistência", ylabel="Tensão aplicada", title="Tensão Aplicada vs. Resistência")
-	Plots.scatter!(r3_, v3.(r3_), )
-end
-
-# ╔═╡ 389eaf28-9cff-427d-882d-7ce55224ef79
-md"""
--- E essa equação é **Não Linear**!?
-
--- Sim!
-
--- Como assim?!
-
-**Explicação**:
-
-A equação plotada é não linear, pois expressa a relação entre tensão e resistência em um circuito série.
-
-> A relação linear em circuitos elétricos se dá principalmente entre as grandezas tensão e corrente elétrica, que é o que mais nos interessa.
-
-Mesmo variando o valor de resistência em $R_3$, ao plotar o gráfico da tensão aplicada nos terminais do resitor e da corrente resultante, então é possível observar a relação linear que existe entre as duas grandezas, tensão e corrente elétrica.
-"""
-
-# ╔═╡ 138ebbae-47d7-4d4d-97fb-70c08237effd
-let
-	function v3(r3)
-		r1 = 100.0
-		r2 = 10.0
-
-		# r1 = 0.0
-		# r2 = 0.0
-		
-		rs = r1 + r2 + r3
-		vs = 20.0
-		return vs * r3 / rs
-	end
-
-	r3 = 10.0:100.0
-	i3 = v3.(r3) ./ r3
-
-	r3_ = 10.0:10.0:100.0
-	i3_ = v3.(r3_) ./ r3_
-	
-	Plots.plot(v3.(r3), i3, lw=2,  gridalpha=0.5, xticks=1:10, xlabel="Tensão Resultante", ylabel="Corrente Resultante", title="Tensão vs. Corrente")
-	Plots.scatter!(v3.(r3_), i3_)
-end
-
-# ╔═╡ 2cf6203a-0c32-4e28-a4af-bfb4649c6ef8
-
-
 # ╔═╡ 7fba52b9-6e2e-4433-9fc8-b8ba229d28d2
 md"""
 ## Resistores em Paralelo (Divisor de Corrente)
 """
 
-# ╔═╡ cf57d15c-4403-4c82-819e-37ec9de1f115
-md"""
-Uma análise muito parecida é possível de ser realizada para a Lei de Kirchoff das Correntes, considerando agora um circuito de três resitores em paralelo.
-
-É possível obter o cálculo da corrente resultante em cada componente do circuito paralelo unicamente em função dos valores de:
-- Corrente resultante total,
-- Resistência do elemento em questão, e
-- Resistência equivalente do conjunto.
-
-$$I_1 = \frac{R_{eq}}{R_1} \cdot I_{total}$$
-
-"""
-
 # ╔═╡ 2176e856-2162-4b32-805b-4280463dd8f3
 md"""
-Resistência equivalente do circuito paralelo:
-
-$$\frac{1}{R_p} = \frac{1}{R_1} + \frac{1}{R_2} + \cdots + \frac{1}{R_n}$$
-
-Dica: Nesse caso é melhor trabalhar com condutância elétrica (S) ao invés de resistência elétrica ($\Omega$):
-
-$$G_p = \sum_{i=1}^{N} G_i$$
-
+Resistência equivalente:
 """
 
 # ╔═╡ 4406451f-4a2f-4cf4-a95a-81ce544799e9
@@ -458,92 +317,19 @@ I₂ = Rₚ / R₂ * Iₚ
 # ╔═╡ e1161a1b-e102-4dc6-960c-d9383a88912a
 I₃ = Rₚ / R₃ * Iₚ
 
-# ╔═╡ 0b28859c-23d9-4553-9c10-23c25a38d81d
-md"""
-
-!!! warning "Atenção"
-	Observe que dieferentemente do caso da Lei de Kirchoff das Tensões, a soma das corentes no circuito não permanece constante. 
-
-	Isso acontece porque, diferentemente do caso anterior, **a entrada de corrente varia, uma vez que temos uma fonte de tensão no circuito, e não uma fonte de corrente**.
-
-	Sendo assim, a LKC estabelece unicamente que: **a corrente injetada pela fonte no circuito deve ser o somatório das correntes resultantes em cada componente**.
-
-Equacionando, obtém-se a expressão matemática da Lei de Kirchoff das Correntes:
-
-$$\sum_{i=1}^{N} I_i = 0$$
-"""
-
-# ╔═╡ e607f239-6e5e-4098-8717-d81f5a0c9fcb
-md"""
-Somatório das correntes nos resistores:
-"""
-
-# ╔═╡ 69d6de18-9998-4ba9-8c1e-0f67e8ed1d76
-I₁ + I₂ + I₃
-
-# ╔═╡ 547892a8-5af8-4699-9b18-1479f46b06e9
-I₁ + I₂ + I₃ ≈ Iₚ
-
 # ╔═╡ ea3701d6-b039-43c8-ab4d-99402a1f14f0
-md"""
-!!! note "Questionamento"
-	Como cada variável dessa se comporta para uma variação constante do valor de resistência do resistor $R_3$?
-"""
-
-# ╔═╡ f28d2a8b-9e3b-4ad5-96fb-9bd6edc8e39e
-md"""
-A mesma análise de variação do valor de resistência é possível ser verificada para a LKC, e o que se obtém é uma variação não linear entre valor de resistência e corrente resultante. 
-"""
-
-# ╔═╡ 40f72632-36d3-464a-94b3-57bbf3e57cee
-let
-	function i3(r3, vp=20)
-		r1 = 10.0
-		r2 = 100.0
-		rp = 1.0 / (1.0/r1 + 1.0/r2 + 1.0/r3)
-		ip = vp / rp
-		return rp / r3 * ip
-	end
-
-	r3 = 10.0:100.0
-	r3_ = 10.0:10.0:100.0
-	vp = 20.0
-	Plots.plot(r3, i3.(r3, [vp]), lw=2.0, gridalpha=0.5, xticks=1:10:100, xlabel="Resistência", ylabel="Corrente Resultante", title="Corrente Resultante vs. Resistência")
-	Plots.scatter!(r3_, i3.(r3_, [vp]))
-end
-
-# ╔═╡ b3e80e96-9694-424a-b04c-056725f98a26
-md"""
-A relação linear é obtida, no entanto, quando traça-se o gráfico entre tensão e corrente em qualquer dos resitores do circuito.  
-"""
-
-# ╔═╡ 8e97d7b8-fb45-40ae-9bb5-bd7d81d157da
-let
-	function i3(r3, vp=20)
-		r1 = 10.0
-		r2 = 100.0
-		rp = 1.0 / (1.0/r1 + 1.0/r2 + 1.0/r3)
-		ip = vp / rp
-		return rp / r3 * ip
-	end
-
-	vp = 10.0:100.0
-	vp_ = 10.0:10.0:100.0
-	r3 = 10.0
-	Plots.plot(vp, i3.([r3], vp), lw=2.0, gridalpha=0.5, xticks=1:10:100, xlabel="Tensão Aplicada", ylabel="Corrente Resultante", title="Corrente Resultante vs. Tensão Aplicada")
-	Plots.scatter!(vp_, i3.([r3], vp_))
-end
-
-# ╔═╡ f9a70e83-f9c0-4d55-a5fc-2bc1e9ac4212
 
 
 # ╔═╡ c33574bc-6988-40b0-9992-b1593b148e00
 md"""
 ## Referências
 
+- [Julia](https://julialang.org/)
+- [Pluto](https://plutojl.org/)
 - [Basic Physics of the Incandescent Lamp](https://physlab.org/wp-content/uploads/2016/03/Planck_ref8.pdf)
 - [Incandescent Light bulb](https://en.wikipedia.org/wiki/Incandescent_light_bulb)
 - [Incandescent Lamp](https://www.mathworks.com/help/sps/ref/incandescentlamp.html)
+- [Constante de tempo tèrmica](https://www.mmc.co.jp/adv/en/solution/thermistor/thermistor08.html)
 """
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
@@ -563,7 +349,7 @@ Polynomials = "~4.0.11"
 PLUTO_MANIFEST_TOML_CONTENTS = """
 # This file is machine-generated - editing it directly is not advised
 
-julia_version = "1.11.1"
+julia_version = "1.11.5"
 manifest_format = "2.0"
 project_hash = "bc4f1ef8ce25217e14e4aa9dadcd356d63ca7a05"
 
@@ -1114,7 +900,7 @@ version = "0.3.27+1"
 [[deps.OpenLibm_jll]]
 deps = ["Artifacts", "Libdl"]
 uuid = "05823500-19ac-5b8b-9628-191a04bc5112"
-version = "0.8.1+2"
+version = "0.8.5+0"
 
 [[deps.OpenSSL]]
 deps = ["BitFlags", "Dates", "MozillaCACerts_jll", "OpenSSL_jll", "Sockets"]
@@ -1774,9 +1560,9 @@ version = "1.4.1+1"
 """
 
 # ╔═╡ Cell order:
-# ╟─0c9e510b-ce0b-4faa-a0fa-b41dcaa0185e
+# ╠═0c9e510b-ce0b-4faa-a0fa-b41dcaa0185e
+# ╟─69842401-4076-411a-8944-4e4315d07394
 # ╠═484492c2-93d5-11ef-2052-f3d697be6645
-# ╠═0fe629eb-a88e-4f4e-bb29-960930a99e81
 # ╠═cf87a9d2-4e8d-48c7-b8cc-0bbdb9c6eb86
 # ╟─b0e2d4b8-bab0-4958-8ff8-c147cd50e209
 # ╟─a243d2d3-d294-4e7c-9414-aeafc559ad3b
@@ -1788,7 +1574,8 @@ version = "1.4.1+1"
 # ╟─1b1ff585-2e5a-4d57-9c31-2107ad7a1762
 # ╟─cb8126c3-d86b-4103-adca-a0228923d3e9
 # ╟─31ef3285-577d-4a80-8066-2164b2e3f6dc
-# ╟─686e734e-a36a-4536-ab54-453af1e01abf
+# ╠═686e734e-a36a-4536-ab54-453af1e01abf
+# ╟─ab137b79-8284-4358-b37f-ffcda39c35eb
 # ╟─36ccc5b5-b338-4f4d-ac86-e2c1ea4826d7
 # ╟─877070f5-869a-45f0-8cd6-252d849b155d
 # ╠═fb1a1e06-d947-4959-ba11-0f926b6d7bb9
@@ -1797,32 +1584,21 @@ version = "1.4.1+1"
 # ╠═8b0422f1-b6e0-4e7d-a685-b727c10f2c5e
 # ╠═e9b14c38-cb12-4b0b-bf20-c46a9b110714
 # ╠═59119392-0803-4e74-8902-d125881ac97a
-# ╟─6eb3db1e-c025-4286-a4ce-1c012112d8ef
 # ╟─8723b580-4a24-41ff-8afe-7bf2f261a7f3
-# ╟─9e4fa789-c9c6-429d-acf0-7aaad445c47d
-# ╟─8aa520ca-78f1-4398-8cb3-c125ba62b6fb
 # ╠═cbdd9cf2-a276-4ebd-b9e2-d7864205e5e7
-# ╠═c8646237-2fe5-4e2b-9f96-bf059174e914
-# ╟─fcf5c3a7-d6a5-4e02-8930-8f8521df5390
-# ╠═6daf5d7a-1211-4677-bddd-55a39bdf7f62
-# ╟─50da36dd-665a-4531-9066-1bfac13dbd2f
-# ╟─2102a0e9-a073-44a4-9303-63bb1ccdf840
-# ╟─4cfeacb9-567d-495d-9f68-3eb5286163b0
 # ╠═2cc848ab-4c0c-457e-884b-eeeb0385a402
-# ╟─dd3943a0-0e15-4fd5-83ec-65e09dcdd261
+# ╟─50da36dd-665a-4531-9066-1bfac13dbd2f
+# ╠═6daf5d7a-1211-4677-bddd-55a39bdf7f62
+# ╠═2102a0e9-a073-44a4-9303-63bb1ccdf840
+# ╟─4cfeacb9-567d-495d-9f68-3eb5286163b0
+# ╠═dd3943a0-0e15-4fd5-83ec-65e09dcdd261
 # ╟─2acd8a95-6870-4f87-bc4e-fb7574766365
 # ╠═9d85e5c6-5ec8-47ad-8fcd-48acdf5bc801
 # ╠═fb7592bd-a945-4940-b3b8-d8c0ce5aa306
 # ╠═feac9310-a0a5-464b-811a-1af5a9d51725
 # ╟─caf9a932-4a1f-477b-b484-e0c482a83915
 # ╠═7819f3a5-9238-40f1-ade3-ab31e3855f98
-# ╟─af1fa27a-38cc-4873-a8de-a1b11fe1cda0
-# ╠═1a31c834-70d3-4714-84c5-9a5790dbe99e
-# ╟─389eaf28-9cff-427d-882d-7ce55224ef79
-# ╠═138ebbae-47d7-4d4d-97fb-70c08237effd
-# ╟─2cf6203a-0c32-4e28-a4af-bfb4649c6ef8
 # ╟─7fba52b9-6e2e-4433-9fc8-b8ba229d28d2
-# ╟─cf57d15c-4403-4c82-819e-37ec9de1f115
 # ╟─2176e856-2162-4b32-805b-4280463dd8f3
 # ╠═4406451f-4a2f-4cf4-a95a-81ce544799e9
 # ╟─3f6b5085-6677-4a2b-ab52-08f9d40f7377
@@ -1833,16 +1609,7 @@ version = "1.4.1+1"
 # ╠═9d30bedb-f6c5-4e99-b19d-9ab3f1e687eb
 # ╠═42d14587-7c20-43dc-a00b-360336c9c488
 # ╠═e1161a1b-e102-4dc6-960c-d9383a88912a
-# ╟─0b28859c-23d9-4553-9c10-23c25a38d81d
-# ╟─e607f239-6e5e-4098-8717-d81f5a0c9fcb
-# ╠═69d6de18-9998-4ba9-8c1e-0f67e8ed1d76
-# ╠═547892a8-5af8-4699-9b18-1479f46b06e9
-# ╟─ea3701d6-b039-43c8-ab4d-99402a1f14f0
-# ╟─f28d2a8b-9e3b-4ad5-96fb-9bd6edc8e39e
-# ╠═40f72632-36d3-464a-94b3-57bbf3e57cee
-# ╟─b3e80e96-9694-424a-b04c-056725f98a26
-# ╠═8e97d7b8-fb45-40ae-9bb5-bd7d81d157da
-# ╟─f9a70e83-f9c0-4d55-a5fc-2bc1e9ac4212
+# ╠═ea3701d6-b039-43c8-ab4d-99402a1f14f0
 # ╟─c33574bc-6988-40b0-9992-b1593b148e00
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
