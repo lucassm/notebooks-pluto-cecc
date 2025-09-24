@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.18
+# v0.20.6
 
 using Markdown
 using InteractiveUtils
@@ -27,27 +27,27 @@ end
 md"""
 # Laboratório de Circuitos Elétricos I
 
-!!! tip "Semestre 2024.2"
+!!! tip "Semestre 2025.2"
 	- Departamento de Engenharia Elétrica - Universidade Federal do Ceará
 	- Turmas 01 e 02
-	- Professor Lucas Silveira
+	- Lucas Silveira - professor adjunto do DEE-UFC
+	- Levi Nogueira - estudante de doutorado do PPGEE-UFC
 
 ## Práticas 1 e 2: Lei de Ohm e Leis de Kirchhoff
 
-O objetivo de deste notebook é realizar experimentos computacionais, utilizando a linguagem de programação Julia, que possam auxiliar no entendimento da tanto da teoria envolvida na prática de laboratório quanto de alguns aspectos propriamente experimentais.
+O objetivo de deste notebook é realizar experimentos computacionais, utilizando a linguagem de programação **Julia**, que possam auxiliar no entendimento tanto da teoria envolvida na prática de laboratório quanto de alguns aspectos propriamente experimentais.
 
-Além disso, está sendo utilizado o Pluto, uma plataforma de notebooks que permite que se intercale texto e código em caixas separadas, produzindo uma espécie de PDF com trechos executáveis de código.
+Além disso, está sendo utilizado o **Pluto.jl**, uma plataforma de notebooks que permite a utilização intercalada entre texto e código computacional em *caixas* (células) separadas, produzindo uma página web interativa com trechos executáveis de código.
 
-Para saber mais sobre [Julia](https://julialang.org/) e os [Pluto](https://plutojl.org/) noteboks, basta clicar nos links.
-
+Para saber mais sobre a linguagem de programação [Julia](https://julialang.org/) e os [Pluto](https://plutojl.org/) noteboks, basta clicar nos links.
 """
 
 # ╔═╡ 69842401-4076-411a-8944-4e4315d07394
 md"""
 !!! tip "Pacotes em Julia"
-	- De forma similar à linguagem de programaçao Python, Julia possui diversos pacotes pré-prontos
-	- Esses pacotes são importados para o ambiente de execução utilizando o comando "import" e declara-se seu uso em um determinado arquivo através do comando "using".
-	- Além disso, o Pluto especificamente foi desenvolvido priorizando a execução de um comando por célula. Para executar mais de um comando, utiliza-se "begin" e "end".
+	- De forma similar à linguagem de programaçao *Python*, **Julia** possui um vasto ecossitema de bibliotecas e projetos focados em domínios específicos disponibilizados de forma 100% gratuita em repositórios abertos na web.
+	- Essas bibliotecas podem ser importados para o ambiente de execução utilizando o comando **import** e declara-se seu uso em um determinado arquivo através do comando **using**.
+	- Além disso, o Pluto especificamente foi desenvolvido priorizando a execução de um comando por célula. Para executar mais de um comando, utiliza-se as expressões **begin** e **end**.
 """
 
 # ╔═╡ cf87a9d2-4e8d-48c7-b8cc-0bbdb9c6eb86
@@ -60,7 +60,7 @@ A Primeira Lei de Ohm (uma homenagem ao fı́sico alemão George Simon Ohm, 1787
 Composições de elementos lineares também permitem a constatação da Lei de Ohm.
 
 !!! note "Expressão Matemática da Lei de Ohm"
-	A expressão clássica para a Lei de Ohm é:
+	A expressão clássica para a **Lei de Ohm** é:
 
 	$$V = R \cdot i$$
 
@@ -72,6 +72,8 @@ md"""
 ## Resistência Constante
 
 Para a primeira situação considera-se a resistência constante para todos os valores de tensão aplicada nos terminais do resistor.
+
+Através do controle mostrado abaixo é possível variar o valor da resistência para todos os valores de tensão considerados e assim observar o impacto gerado no gráfico plotado de *tensão vs. corrente* elétrica.
 """
 
 # ╔═╡ 22dd8c3d-4bfc-4361-8218-623db116aa44
@@ -112,7 +114,7 @@ Para a segunda situação considera-se a resistência variando para os valores d
 md""" 
 Acontece que **boa parte das cargas resistivas reais são na verdade não lineares** e sua resistência varia com fatores externos, como por exemplo a temperatura.
 
-Um dispositivo bastante comum e fácil de ser encontrado no nosso cotiidiano (será?) que apresentea esse tipo de comportamento é a **lâmpada incandescente**.
+Um dispositivo bastante comum e fácil de ser encontrado no dia a dia (será?) que apresenta esse tipo de comportamento é a **lâmpada incandescente**.
 
 !!! tip "Lâmpada incandescente"
 	Para saber mais sobre lâmpadas incandescentes leia o seguinte [artigo](https://en.wikipedia.org/wiki/Incandescent_light_bulb)
@@ -125,7 +127,8 @@ md"""
 
 # ╔═╡ 686e734e-a36a-4536-ab54-453af1e01abf
 md"""
-A principal característica de uma lâmpada incandescente é que sua resistência aumenta conforme o filamento esquenta
+
+> A principal característica de uma lâmpada incandescente é que sua resistência aumenta conforme o filamento esquenta
 
 Assumindo, para simplificar, que:
 
@@ -135,14 +138,13 @@ Assumindo, para simplificar, que:
 A temperatura do filamento é dada por:
 
 
-$k\cdot tc\cdot \frac{dT}{dt}=i^{2}R - k \cdot T$
+$k\cdot tc\cdot \frac{dT}{dt} + k \cdot T = i^{2}R$
 
 E a resistência do filamento é dada por:
 
 $R = R_{0} \cdot (1+\alpha \cdot T)$
 
-Onde
-
+Em que:
 
 *   $R_{0}$ é a resistência inicial (em temperatura ambiente)
 *   $T$ é a temperatura do filamento relativo à temperatura do ambiente
@@ -170,18 +172,20 @@ E a resistência do filamento é dada por:
 
 $R = R_{0} \cdot (1+\alpha \cdot T)$
 
-Sabendo que $R \cdot i^{2} = v^{2}/R$ tem-se:
+Pela própria Lei de Ohm, sabe-se que $R \cdot i^{2} = v^{2}/R$, assim é possível deixar a expressão acima em função de valores de tensão:
 
 $v^{2}/R= k \cdot T$
 
 Substituindo a expressão de resitência na expressão acima e organizand os termos em função de $T$ obtém-se:
 
-$k \cdot R_{0} \cdot T + k \cdot \alpha \cdot R_{0} \cdot T^{2} - v^{2} = 0$
+$k \cdot \alpha \cdot R_{0} \cdot T^{2} + k \cdot R_{0} \cdot T - v^{2} = 0$
 """
 
 # ╔═╡ 877070f5-869a-45f0-8cd6-252d849b155d
 md"""
-Para gerar a curva correspondente, começamos definindo os parâmetros:
+De posse dessa equação, que relaciona temperatura e tensão elétrica, é possível obter os valores de temperatura da resistência para diferentes valores de tensão aplicada, e a partir disso, encontrar o valor de resistência em regime permanente para a temperatura encontrada.
+
+Para gerar a curva correspondente, começamos associando valores aos parâmetros da equação acima:
 """
 
 # ╔═╡ fb1a1e06-d947-4959-ba11-0f926b6d7bb9
@@ -349,7 +353,7 @@ Polynomials = "~4.0.11"
 PLUTO_MANIFEST_TOML_CONTENTS = """
 # This file is machine-generated - editing it directly is not advised
 
-julia_version = "1.11.5"
+julia_version = "1.11.6"
 manifest_format = "2.0"
 project_hash = "bc4f1ef8ce25217e14e4aa9dadcd356d63ca7a05"
 
@@ -1560,7 +1564,7 @@ version = "1.4.1+1"
 """
 
 # ╔═╡ Cell order:
-# ╠═0c9e510b-ce0b-4faa-a0fa-b41dcaa0185e
+# ╟─0c9e510b-ce0b-4faa-a0fa-b41dcaa0185e
 # ╟─69842401-4076-411a-8944-4e4315d07394
 # ╠═484492c2-93d5-11ef-2052-f3d697be6645
 # ╠═cf87a9d2-4e8d-48c7-b8cc-0bbdb9c6eb86
@@ -1574,10 +1578,10 @@ version = "1.4.1+1"
 # ╟─1b1ff585-2e5a-4d57-9c31-2107ad7a1762
 # ╟─cb8126c3-d86b-4103-adca-a0228923d3e9
 # ╟─31ef3285-577d-4a80-8066-2164b2e3f6dc
-# ╠═686e734e-a36a-4536-ab54-453af1e01abf
+# ╟─686e734e-a36a-4536-ab54-453af1e01abf
 # ╟─ab137b79-8284-4358-b37f-ffcda39c35eb
 # ╟─36ccc5b5-b338-4f4d-ac86-e2c1ea4826d7
-# ╟─877070f5-869a-45f0-8cd6-252d849b155d
+# ╠═877070f5-869a-45f0-8cd6-252d849b155d
 # ╠═fb1a1e06-d947-4959-ba11-0f926b6d7bb9
 # ╟─82b866a0-8e91-4dde-b116-05337fd36ac0
 # ╠═eeaebad5-d8e7-4a9d-ac42-c564b7617480
