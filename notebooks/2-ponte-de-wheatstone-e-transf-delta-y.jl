@@ -55,47 +55,38 @@ md"""
 md"""
 Considerando o equacionamento abaixo para a configuração da ponte de Wheatstone:
 
-```
+"""
 
-  ----- ------ 
- |     |      |
- | 	   |      |
- | 	Rx[ ]  R2[ ]
- |	   |      |
-(~)   a|-    -|b
- |     |      |
- | 	R3[ ]  R4[ ]
- | 	   |      | 
- |     |      | 
-  ----- ------ 
+# ╔═╡ b6c185e0-16dd-4f6c-8780-dccecddbb83e
+md"""
 
-```
-
-$$V_{AB} = \left( \frac{R_3}{R_x + R_3} - \frac{R_4}{R_2 + R_4} \right) \cdot V_f$$
-
+![Ponte de Wheatstone](https://i.imgur.com/SFRVRV9.png)
 
 """
 
+# ╔═╡ 7db876c1-d1be-408c-82c0-fb4309d63d54
+md"""
+$$V_{AB} = \left( \frac{R_3}{R_x + R_3} - \frac{R_4}{R_2 + R_4} \right) \cdot V_f$$
+"""
+
 # ╔═╡ 6496325e-a95b-4fb1-b6f5-d1f22f6d552c
-@bind Rx Slider(0.0:50.0:3.0e3, default=1e3, show_value=true)
+@bind Rx Slider(0.0:50.0:2.0e3, default=1e3, show_value=true)
 
 # ╔═╡ f48780fd-6ddb-4d3c-b402-1a24abcba8f9
 begin
-	R2 = 2.0e3
+	R2 = 1.0e3
 	R3 = 1.0e3
 	R4 = 1.0e3
 	Vf = 10.0
 end
 
 # ╔═╡ ca4222ce-8c20-4bcc-a876-66788193a57f
-md"""
-#### Valor da Tensão Vab = $(trunc((R3 / (Rx + R3) - R4 / (R2 + R4)) * Vf, digits=2)) V
-"""
+Vab = (R3 / (Rx + R3) - R4 / (R2 + R4)) * Vf 
 
 # ╔═╡ 06b2a323-97ab-4671-8a10-0d08c7e8528a
 begin
-	Rx_ = 0.0:50.0:3.0e3
-	Rx__ = 0.0:100.0:3.0e3
+	Rx_ = 0.0:50.0:2.0e3
+	Rx__ = 0.0:100.0:2.0e3
 	
 	Vab_ = (R3 ./ (Rx_ .+ R3) .- R4 / (R2 + R4)) .* Vf
 	Vab__ = (R3 ./ (Rx__ .+ R3) .- R4 / (R2 + R4)) .* Vf
@@ -125,7 +116,7 @@ Resistor desconhecido Rxp: $(@bind Rxp Slider(1.0e3:50.0:1.8e3, default=1.0e3, s
 # ╔═╡ 22bd1528-6743-4d40-9f4b-83fce7706913
 md"""
 
-### Vab = $(trunc((R3_ / (Rxp + R3_) - R4 / (R2 + R4)) * Vf, digits=2)) V
+### Vab = $((R3_ / (Rxp + R3_) - R4 / (R2 + R4)) * Vf) V
 
 ### Valor Estimado para Rxp = $(R3_ * R2 / R4) $$\Omega$$
 
@@ -142,16 +133,20 @@ md"""
 # ╔═╡ a11f96c4-1ce7-45d0-bead-1e6cccd57730
 md"""
 
-!!! tip "MESH ANALYSIS (GENERAL APPROACH)"
+!!! tip "Análise de Malhas (Método Geral)"
 
-	1. Assign a distinct current in the **clockwise** direction to each independent, closed loop of the network. 
+	1. Atribua uma corrente na direção **Horária** para cada malha fechada independente na rede. 
 
-	2. **Indicate the polarities** within each loop for each resistor as determined by the assumed direction of loop current for that loop. Note the requirement that the polarities be placed within each loop. This requires, that a resistor have two sets of polarities across it.
+	2. Indique a polaridade de cada resistor em cada malha, de acordo com a direção da corrente na malha. Note que o requisito de que o resistor tenha uma polaridade definida em relação a cada malha pode fazer com que resistores que façam parte de múltiplas malhas tenham múltiplas polaridades.
 
 
-	3. **Apply Kirchhoff’s voltage law around each closed loop in the clockwise direction**. (a) *If a resistor has two or more assumed currents through it, the total current through the resistor is the assumed current of the loop in which Kirchhoff’s voltage law is being applied, plus the assumed currents of the other loops passing through in the same direction, minus the assumed currents through in the opposite direction*. (b) *The polarity of a voltage source is unaffected by the direction of the assigned loop currents*.
+	3. Aplique a Lei de Kirchhoff das tensões em cada malha em sentido horário. 
 
-	4. **Solve** the resulting simultaneous linear equations for the assumed loop currents.
+	    (a) *Se um resistor tem duas ou mais correntes passando por ele, a corrente total do resistor é a corrente da malha que se está analizando, somada das correntes que estejam passando por ele na mesma direção, menos as correntes que passam por ele na direção oposta*. 
+
+	    (b) *A polaridade de uma fonte de tensão não é afetada pela direção presumida das correntes de malha*.
+
+	4. Resolva as equações lineares para cada uma das malhas.
 """
 
 # ╔═╡ 81cdf678-38e5-4c71-868c-4ec9bebf07da
@@ -292,7 +287,7 @@ PlutoUI = "~0.7.60"
 PLUTO_MANIFEST_TOML_CONTENTS = """
 # This file is machine-generated - editing it directly is not advised
 
-julia_version = "1.11.6"
+julia_version = "1.11.5"
 manifest_format = "2.0"
 project_hash = "92c4b11e7e04ddb12576e6ef1772909f0151ef1f"
 
@@ -1612,9 +1607,11 @@ version = "1.4.1+1"
 # ╟─93ead8ed-83af-46e5-99a0-3bfea745efc9
 # ╟─1cf3f558-20ca-4690-960f-342e3fa90cf8
 # ╟─a46e62f3-27a4-4257-a83b-a23f164bd78c
+# ╟─b6c185e0-16dd-4f6c-8780-dccecddbb83e
+# ╟─7db876c1-d1be-408c-82c0-fb4309d63d54
 # ╠═6496325e-a95b-4fb1-b6f5-d1f22f6d552c
 # ╠═f48780fd-6ddb-4d3c-b402-1a24abcba8f9
-# ╟─ca4222ce-8c20-4bcc-a876-66788193a57f
+# ╠═ca4222ce-8c20-4bcc-a876-66788193a57f
 # ╠═06b2a323-97ab-4671-8a10-0d08c7e8528a
 # ╟─e269fe9c-37a6-4eaf-84b8-6cac50f8ffe8
 # ╟─43dc1092-5e59-4e68-a7dd-5a470184a979
