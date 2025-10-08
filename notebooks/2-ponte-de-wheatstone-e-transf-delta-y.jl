@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.4
+# v0.20.19
 
 using Markdown
 using InteractiveUtils
@@ -7,7 +7,7 @@ using InteractiveUtils
 # This Pluto notebook uses @bind for interactivity. When running this notebook outside of Pluto, the following 'mock version' of @bind gives bound variables a default value (instead of an error).
 macro bind(def, element)
     #! format: off
-    quote
+    return quote
         local iv = try Base.loaded_modules[Base.PkgId(Base.UUID("6e696c72-6542-2067-7265-42206c756150"), "AbstractPlutoDingetjes")].Bonds.initial_value catch; b -> missing; end
         local el = $(esc(element))
         global $(esc(def)) = Core.applicable(Base.get, el) ? Base.get(el) : iv(el)
@@ -77,11 +77,11 @@ $$V_{AB} = \left( \frac{R_3}{R_x + R_3} - \frac{R_4}{R_2 + R_4} \right) \cdot V_
 """
 
 # ╔═╡ 6496325e-a95b-4fb1-b6f5-d1f22f6d552c
-@bind Rx Slider(0.0:50.0:2.0e3, default=1e3, show_value=true)
+@bind Rx Slider(0.0:50.0:3.0e3, default=1e3, show_value=true)
 
 # ╔═╡ f48780fd-6ddb-4d3c-b402-1a24abcba8f9
 begin
-	R2 = 1.0e3
+	R2 = 2.0e3
 	R3 = 1.0e3
 	R4 = 1.0e3
 	Vf = 10.0
@@ -94,8 +94,8 @@ md"""
 
 # ╔═╡ 06b2a323-97ab-4671-8a10-0d08c7e8528a
 begin
-	Rx_ = 0.0:50.0:2.0e3
-	Rx__ = 0.0:100.0:2.0e3
+	Rx_ = 0.0:50.0:3.0e3
+	Rx__ = 0.0:100.0:3.0e3
 	
 	Vab_ = (R3 ./ (Rx_ .+ R3) .- R4 / (R2 + R4)) .* Vf
 	Vab__ = (R3 ./ (Rx__ .+ R3) .- R4 / (R2 + R4)) .* Vf
@@ -292,7 +292,7 @@ PlutoUI = "~0.7.60"
 PLUTO_MANIFEST_TOML_CONTENTS = """
 # This file is machine-generated - editing it directly is not advised
 
-julia_version = "1.11.1"
+julia_version = "1.11.6"
 manifest_format = "2.0"
 project_hash = "92c4b11e7e04ddb12576e6ef1772909f0151ef1f"
 
@@ -897,7 +897,7 @@ version = "0.3.27+1"
 [[deps.OpenLibm_jll]]
 deps = ["Artifacts", "Libdl"]
 uuid = "05823500-19ac-5b8b-9628-191a04bc5112"
-version = "0.8.1+2"
+version = "0.8.5+0"
 
 [[deps.OpenSSL]]
 deps = ["BitFlags", "Dates", "MozillaCACerts_jll", "OpenSSL_jll", "Sockets"]
@@ -1605,7 +1605,7 @@ version = "1.4.1+1"
 """
 
 # ╔═╡ Cell order:
-# ╠═19b9aa11-3850-45a4-8ce1-5a3ff9d9a5a3
+# ╟─19b9aa11-3850-45a4-8ce1-5a3ff9d9a5a3
 # ╠═bbdc8a1f-feb4-400f-a277-c89b0d8c17a9
 # ╠═9ea4a211-9374-4019-b395-44a647f310e5
 # ╠═abf48c08-aae6-45ff-8ed0-1b2d0588a118
