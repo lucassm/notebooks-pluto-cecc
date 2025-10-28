@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.19
+# v0.20.18
 
 using Markdown
 using InteractiveUtils
@@ -48,19 +48,19 @@ Em decorrência da aplicação das Leis de Ohm e de Kirchhoff da Tensão e da Co
 
 !!! note "Definição de Sistema Linear"
 
-	Mathematically, for a continuous-time system, given two arbitrary inputs:
+	Matematicamente, para um sistema contínuo no tempo, dadas duas entradas arbitrárias:
 
 	``
 	\begin{aligned}x_{1}(t)\\x_{2}(t)\end{aligned}
 	``
 	
-	As well as their respective zero-state outputs 
+	Assim como suas respectivas saída em estado zero: 
 	
 	``
 	{\displaystyle{\begin{aligned}y_{1}(t)&=H\left\{x_{1}(t)\right\}\\y_{2}(t)&=H\left\{x_{2}(t)\right\}\end{aligned}}} 
 	``
 		
-	Then a linear system must satisfy:
+	Então um sistema linear deve satisfazer a equação:
 	
 	``
 	{\displaystyle
@@ -68,16 +68,16 @@ Em decorrência da aplicação das Leis de Ohm e de Kirchhoff da Tensão e da Co
 	} 
 	``
 		
-	For any scalar values ``\alpha`` and ``\beta``, for any input signals x1(t) and x2(t), and for all time t.
+	Para quaisquer valores escalares ``\alpha`` e ``\beta``, para quaisquer sinais de entrada x1(t) e x2(t), e todo o tempo t.
 
-The system is then defined by the equation ``H(x(t)) = y(t)``, where ``y(t)`` is some arbitrary function of time, and ``x(t)`` is the system state. 
+O sistema é então definido pela equação ``H(x(t)) = y(t)``, onde ``y(t)`` É uma função arbitrária do tempo, e ``x(t)`` é o estado do sistema. 
 
-Given ``y(t)`` and ``H``, the system can be solved for ``x(t)``.
+Dado ``y(t)`` e ``H``, o sistema pode ser resolvido para encontrar ``x(t)``.
 """
 
 # ╔═╡ b9e02602-ed79-4038-ad97-1c818646bdce
 md"""
-## Analise do Circuito 1
+## Análise do Circuito 1
 """
 
 # ╔═╡ 9179e6fd-e6ef-4f44-8759-9330225747a9
@@ -198,7 +198,7 @@ PlutoUI = "~0.7.60"
 PLUTO_MANIFEST_TOML_CONTENTS = """
 # This file is machine-generated - editing it directly is not advised
 
-julia_version = "1.11.6"
+julia_version = "1.11.5"
 manifest_format = "2.0"
 project_hash = "92c4b11e7e04ddb12576e6ef1772909f0151ef1f"
 

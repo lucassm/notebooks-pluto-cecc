@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.4
+# v0.20.18
 
 using Markdown
 using InteractiveUtils
@@ -7,7 +7,7 @@ using InteractiveUtils
 # This Pluto notebook uses @bind for interactivity. When running this notebook outside of Pluto, the following 'mock version' of @bind gives bound variables a default value (instead of an error).
 macro bind(def, element)
     #! format: off
-    quote
+    return quote
         local iv = try Base.loaded_modules[Base.PkgId(Base.UUID("6e696c72-6542-2067-7265-42206c756150"), "AbstractPlutoDingetjes")].Bonds.initial_value catch; b -> missing; end
         local el = $(esc(element))
         global $(esc(def)) = Core.applicable(Base.get, el) ? Base.get(el) : iv(el)
@@ -42,21 +42,21 @@ TableOfContents()
 md"""
 ## Aspectos Teóricos
 
-### Teorema de Thevennin
+### Teorema de Thévenin
 
-Thévenin’s theorem states the following:
+Teorema de Thévenin:
 
-> Any two-terminal, linear bilateral dc network can be replaced by an equivalent circuit consisting of a voltage source and a series resistor*.
+> *Qualquer rede linear bilateral de corrente contínua com dois terminais pode ser substituída por um circuito equivalente composto por uma fonte de tensão e um resistor em série.*
 
-The Thévenin equivalent circuit provides an equivalence at the terminals only — the internal construction and characteristics of the original network and the Thévenin equivalent are usually quite different.
+O circuito equivalente de Thévenin provê uma equivalência **somente nos terminais**. A construção interna e as características da rede original e do equivalente de Thévenin são normalmente bem diferentes.
 
-This theorem achieves two important objectives. First, as was true for all the methods previously described, it allows us to find any particular voltage or current in a linear network with one, two, or any other number of sources. Second, we can concentrate on a specific portion of a network by replacing the remaining network with an equivalent circuit.
+Através dele é possível simplificar partes da rede que não são objeto de análise (tudo que fica antes dos terminais) e focar no que realmente se quer analisar (o que fica depois dos terminais) sem que o comportamento seja alterado. Assim pode-se trocar uma rede complexa, mas que não é o foco do estudo, por uma fonte e um resistor.
 
 ### Teorema de Norton
 
-> Any two-terminal linear bilateral dc network can be replaced by an equivalent circuit consisting of a current source and a parallel resistor.
+> *Qualquer rede linear bilateral de corrente contínua com dois terminais pode ser substituída por um circuito equivalente composto por uma fonte de corrente e um resistor em paralelo.*
 
-The discussion of Thévenin’s theorem with respect to the equivalent circuit can also be applied to the Norton equivalent circuit. 
+As características e aplicações do equivalente de Thévenin também são válidas para o equivalente de Norton. 
 
 """
 
@@ -273,7 +273,7 @@ PlutoUI = "~0.7.60"
 PLUTO_MANIFEST_TOML_CONTENTS = """
 # This file is machine-generated - editing it directly is not advised
 
-julia_version = "1.11.1"
+julia_version = "1.11.5"
 manifest_format = "2.0"
 project_hash = "92c4b11e7e04ddb12576e6ef1772909f0151ef1f"
 
@@ -878,7 +878,7 @@ version = "0.3.27+1"
 [[deps.OpenLibm_jll]]
 deps = ["Artifacts", "Libdl"]
 uuid = "05823500-19ac-5b8b-9628-191a04bc5112"
-version = "0.8.1+2"
+version = "0.8.5+0"
 
 [[deps.OpenSSL]]
 deps = ["BitFlags", "Dates", "MozillaCACerts_jll", "OpenSSL_jll", "Sockets"]
