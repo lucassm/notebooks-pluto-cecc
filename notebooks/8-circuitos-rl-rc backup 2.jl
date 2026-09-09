@@ -4,427 +4,275 @@
 using Markdown
 using InteractiveUtils
 
-# This Pluto notebook uses @bind for interactivity. When running this notebook outside of Pluto, the following 'mock version' of @bind gives bound variables a default value (instead of an error).
-macro bind(def, element)
-    #! format: off
-    return quote
-        local iv = try Base.loaded_modules[Base.PkgId(Base.UUID("6e696c72-6542-2067-7265-42206c756150"), "AbstractPlutoDingetjes")].Bonds.initial_value catch; b -> missing; end
-        local el = $(esc(element))
-        global $(esc(def)) = Core.applicable(Base.get, el) ? Base.get(el) : iv(el)
-        el
-    end
-    #! format: on
-end
-
-# ╔═╡ 282f2886-1bbe-4db4-8392-04519f297754
+# ╔═╡ d74b3117-8562-4b64-b9ae-c804725bebc5
 begin
-	using DifferentialEquations
 	using PlutoUI
 	using Plots
-	using PlotlyJS
+	using DifferentialEquations
 end
 
-# ╔═╡ 32c3a9dc-3a74-4d3d-8ea2-6a6357bb18f2
-plotlyjs()
+# ╔═╡ 115a404c-67f2-4de4-86a4-eb3438c6a204
+PlutoUI.TableOfContents()
 
-# ╔═╡ cb00963a-1165-42bc-85a5-fb703f3f1f70
-TableOfContents()
+# ╔═╡ 8fa20d1f-34d0-4e4e-ba38-4cb46795b6b9
 
-# ╔═╡ f12b4e6a-e364-11ef-0eab-9bca0fc98997
+
+# ╔═╡ 9e39416c-dde5-11ef-2cf5-c143ac28d370
 md"""
-# Respostas do circuito RLC à aplicação de entrada de tensão na forma de degrau
+# Circuitos RL e RC Submetidos à Tensões Contínuas
+
+### Objetivos deste Pluto notebook
+
+1. Compreender o funcionamento básico de circuitos RL (Resistivo-Indutivo) e RC (Resistivo-Capacitivo).
+2. Analisar o comportamento desses circuitos quando submetidos a uma tensão contínua em forma de degrau.
+3. Derivar e interpretar as equações diferenciais que descrevem esses circuitos.
+4. Identificar as respostas de tensão e corrente (transitória e permanente) em cada caso.
+5. Plotar os gráficos de tensão e de corrente dos circuitos RC e RL.
 """
 
-# ╔═╡ 2e6b3dd5-2722-427d-b67a-33a94492557e
+# ╔═╡ 89f1a737-cd23-44b7-8c72-043b50c32550
 
 
-# ╔═╡ 4cda42f6-86f3-443b-acbf-404b3790dcfb
+# ╔═╡ fa8a0926-777f-451c-b78a-ceb693d4c48b
 md"""
-Circuitos RLC são constituídos pelos três elmentos mais básicos da teoria de circuitos elétricos:
+## 1. Introdução aos Circuitos RL e RC
 
-- Resistores ($R$);
-- Indutores ($L$);
-- Capacitores ($C$);
+#### 1.1 Circuito RL (Resistivo-Indutivo)
 
-> Sempre que um sinal de tensão é aplicado à um sistema que possui indutores, capacitores ou ambos, um perpíodo transitório é observado até que o regime permanente do sistema possa ser alcançado.
-
-!!! note "Modelo Matemáticos dos Circuitos RLC"
-	Esse período *transitório* dos circuitos RLC pode ser modelado pelo uso de equações diferenciais já que as taxas de variação energética dos componentes indutivos e capacitivos são descritas por derivadas e integrais.
-"""
-
-# ╔═╡ 0305d283-af41-4ca6-9aaa-8c42e082cb38
+- Composto por:
+  - Um resistor (R) com resistência $R$ (em ohms, $\Omega$).
+  - Um indutor (L) com indutância $L$ (em henrys, H).
+- **Propriedade chave**: O indutor **armazena energia em seu campo magnético** e **resiste a variações na corrente**.
 
 
-# ╔═╡ 004791e5-b302-4d65-890f-b5f815b166d2
-md"""
+#### 1.2 Circuito RC (Resistivo-Capacitivo)
 
-## Equações Diferenciais que Descrevem o Comportamento de um Circuito RLC 
-
-O circuito RLC pode estar em **série** ou **paralelo**. 
-
-Modelando um **circuito RLC série**, é possível descrever seu comportamento em termos de grandezas elétricas por meio de uma equação diferencial. 
-
-Considere então um circuito RLC série submetido a um sinal de tensão $v(t)$. A equação diferencial que governa a corrente $i(t)$ que circula pelo circuito é:
-
-$$L \frac{d^2 i(t)}{dt^2} + R \frac{di(t)}{dt} + \frac{1}{C} i(t) = \frac{d v(t)}{dt}$$
-
-Essa equação é **homogênea** e tem a forma padrão de uma equação diferencial de segunda ordem:
-
-
-!!! note "Modelo Matemático do Circuito RLC"
-	$$\frac{d^2 i(t)}{dt^2} + 2\alpha \frac{di(t)}{dt} + \omega_0^2 i(t) = \frac{d v(t)}{dt}$$
-
-	Em que:
-
-	- A expressão $\alpha = \frac{R}{2L}$ é o **coeficiente de amortecimento**,
-	- A expressão $\omega_0 = \frac{1}{\sqrt{LC}}$ é a **frequência natural sem amortecimento**.
-
-A solução da equação depende das **raízes da equação característica**:  
-
-$$s^2 + 2\alpha s + \omega_0^2 = 0$$
-
-A solução da equação característica é dada por:  
-
-$$s = -\alpha \pm \sqrt{\alpha^2 - \omega_0^2}$$
-
-O comportamento do sistema depende do valor do **discriminante** $\alpha^2 - \omega_0^2$.
+- Composto por:
+  - Um resistor (R) com resistência $R$.
+  - Um capacitor (C) com capacitância $C$ (em farads, F).
+- **Propriedade chave**: O capacitor **armazena energia em seu campo elétrico** e **resiste a variações na tensão**.
 
 """
 
-# ╔═╡ 30b9d9c2-2e9f-4782-bfb1-f9c0ee99499c
+# ╔═╡ 61072b7d-9aa1-4c9c-baaa-c6c9bf0d9d52
 
 
-# ╔═╡ fb4f7899-d576-41e9-8094-e6939af966f3
+# ╔═╡ 83d1207a-8aff-4b05-b00c-0fc5ffa6d051
 md"""
-Antes de dar sequência às análises de resposta do circuito RLC, é importante definir dois parâmetros que podem ajudar bastante no entendimento dos regimes de amortecimento, são eles:
+### 2. Circuito RL Submetido a uma Tensão Contínua
 
-- Resistência crítica $R_c$.
-- Relação de amortecimento $\varepsilon$.
+Um circuito RL em série conectado a uma fonte de tensão contínua $V$ é representado a partir da Lei de Kirchhoff das Tensões (LKT) da seguinte forma:
 
-Resolvendo a equação de $\Delta = 0$ (caso em que o amortecimento é crítico, como será explicado adiante) para o valor de R (resistência atual do circuito), nessa situação, tem-se:
+$$V = R \cdot i(t) + L \frac{di(t)}{dt}$$
 
-$$\Delta = \alpha^2 - \omega_0^2 = \left(\frac{R}{2L}\right)^2 - \left(\frac{1}{\sqrt{LC}}\right)^2 = 0$$
+Rearranjando:
 
-Desenvolvendo os últimos dois termos da expressão acima:
+$$\frac{di(t)}{dt} + \frac{R}{L} i(t) = \frac{V}{L}$$
 
-$$\left(\frac{R}{2L}\right)^2 - \left(\frac{1}{\sqrt{LC}}\right)^2 = 0$$
+#### 2.1 Solução da Equação Diferencial para Corrente Elétrica
 
-$$R = 2 \sqrt{\frac{L}{C}}$$
+A solução é composta por duas partes:
 
-A esse valor de resistência chama-se **Resistência Crítica**, possível de ser determinada para qualquer circuito RLC:
+1. **Resposta natural (transitória):**
 
-$$R_c = 2 \sqrt{\frac{L}{C}}$$
+$i_n(t) = A \cdot e^{-\frac{R}{L}t}$
 
-Assim, é possível definir também uma **relação de amortecimento**, dada por:
+2. **Resposta forçada (permanente):** 
 
-$$\varepsilon = \frac{R}{R_c} = \frac{R}{2} \sqrt{\frac{C}{L}}$$
+$i_f(t) = \frac{V}{R}$
 
-Em que $R$ é a resistância atual do circuito e $R_c$ sua resistência crítica.
+Combinação:
+
+$$i(t) = \frac{V}{R} + A \cdot e^{-\frac{R}{L}t}$$
+
+Em que, $A$ é uma constante determinada pelas condições iniciais. Se o indutor estava inicialmente descarregado ($i(0) = 0$):
+
+$$A = -\frac{V}{R}$$
+
+Portanto:
+
+!!! note "Definição"
+	Corrente no circuito RL:
+	
+	$$i(t) = \frac{V}{R} \left(1 - e^{-\frac{R}{L}t}\right)$$
+
+#### 2.2 Tensão Elétrica no Indutor
+
+A tensão no indutor é dada por:
+
+$$v_L(t) = L \frac{di(t)}{dt}$$
+
+Substituindo $i(t)$:
+
+!!! note "Definição"
+	Tensão Elétrica no indutor para o circuito RL
+	
+	$$v_L(t) = V \cdot e^{-\frac{R}{L}t}$$
+
 """
 
-# ╔═╡ f9002a7d-99ae-41a8-844d-11d02a5b1962
+# ╔═╡ 84d19f83-93de-4ce1-9d94-802c6f61aeda
 
 
-# ╔═╡ ecdddbf3-a36d-4e72-80c9-2230344c1f4e
+# ╔═╡ db5c7a07-ff6c-4b57-bd0a-4acd013c2de4
 md"""
-## Análise dos Diferentes Regimes de Amortecimento
+### 3. Circuito RC Submetido a uma Tensão Contínua
+
+Um circuito RC em série conectado a uma fonte de tensão contínua $V$ é representado como:
+
+$$V(t) = R \cdot i(t) + \frac{1}{C} \int i(t) \, dt$$
+
+Ou, em termos de carga no capacitor:
+
+$$i(t) = C \frac{dv(t)}{dt}$$
+
+A partir da LKT:
+
+$$V = R \cdot i(t) + v_C(t)$$
+
+Como $i(t) = C \frac{dv_C(t)}{dt}$, obtém-se:
+
+$$V = R \cdot C \frac{dv_C(t)}{dt} + v_C(t)$$
+
+Rearranjando:
+
+$$\frac{dv_C(t)}{dt} + \frac{1}{RC} v_C(t) = \frac{V}{RC}$$
+
+#### 3.1 Solução da Equação Diferencial para Tensão Elétrica
+
+A solução é composta por:
+
+1. **Resposta natural (transitória):** 
+
+$v_{C,n}(t) = B \cdot e^{-\frac{t}{RC}}$
+
+2. **Resposta forçada (permanente):** 
+
+$v_{C,f}(t) = V$
+
+Combinação:
+
+$$v_C(t) = V + B \cdot e^{-\frac{t}{RC}}$$
+
+Em que $B$ é determinado pelas condições iniciais. Se o capacitor estava inicialmente descarregado ($v_C(0) = 0$):
+
+$$B = -V$$
+
+Portanto:
+
+!!! note "Definição"
+	Tensão no capacitor:
+	
+	$$v_C(t) = V \left(1 - e^{-\frac{t}{RC}}\right)$$
+
+#### 3.2 Corrente Elétrica no Circuito
+
+$$i(t) = C \frac{dv_C(t)}{dt}$$
+
+Substituindo $v_C(t)$:
+
+!!! note "Definição"
+	Corrente elétrica no circuito RC:	
+
+	$$i(t) = \frac{V}{R} e^{-\frac{t}{RC}}$$
+
 """
 
-# ╔═╡ db44dc00-3506-4b11-8993-58f5184a2715
+# ╔═╡ 364fa9b3-b1da-4b84-b679-6b6cb8800873
 
 
-# ╔═╡ 25cc7275-8d23-4386-9a2a-c7564e19ae9e
+# ╔═╡ 24ba4d4c-7f7e-4e2e-8989-13e10dcdc844
 md"""
-### Regime Superamortecido ($R^2 > 4L/C$ ou $\alpha^2 > \omega_0^2$)
+### 4. Comparação entre os Circuitos RL e RC
 
-Neste caso, o discriminante é **positivo**, e as raízes são **reais e distintas**:
+| **Aspecto**                 | **Circuito RL**           | **Circuito RC**            |
+|-----------------------------|---------------------------|----------------------------|
+| Elemento de armazenamento   | Indutor (campo magnético) | Capacitor (campo elétrico) |
+| Constante de tempo ($\tau$) | $\tau = \frac{L}{R}$      | $\tau = RC$                |
+| Resposta permanente         | Corrente constante        | Tensão constante           |
 
-$$s_1 = -\alpha + \sqrt{\alpha^2 - \omega_0^2}, \quad s_2 = -\alpha - \sqrt{\alpha^2 - \omega_0^2}$$
 
-A solução da corrente é dada por:
-
-$$i(t) = A e^{s_1 t} + B e^{s_2 t}$$
-
-Em que, $A$ e $B$ são constantes determinadas pelas condições iniciais.
-
-!!! tip "Características do regime de amortecimento super amortecido"
-	- Como $s_1$ e $s_2$ são **negativos**, a corrente **não oscila** e **decai exponencialmente**.
-	- O sistema retorna lentamente ao estado estacionário sem ultrapassagens.
-	- Para esse caso $R > R_c$ e, potanto, $\varepsilon > 1$.
 """
 
-# ╔═╡ fdf8d702-685d-4f02-9730-0cc8040c0806
-
-
-# ╔═╡ d961cbd9-257f-4a3f-a7bd-70c5b8b6aa20
+# ╔═╡ fe8ac183-00ab-4980-8e46-a0b835770f41
 md"""
-### Regime Criticamente Amortecido ($R^2 = 4L/C$ ou $\alpha^2 = \omega_0^2$)
+## Plotagem de Gráficos de tensão e corrente
 
-Neste caso, o discriminante é **zero**, e temos uma **raiz dupla**:  
-
-$$s = -\alpha$$
-
-A solução da corrente assume a forma:
-
-$$i(t) = (A + Bt)e^{-\alpha t}$$
-
-!!! tip "Características do regime de amortecimento criticamente amortecido"
-	- Como $e^{-\alpha t}$ decai no tempo, a corrente **não oscila**, mas **retorna ao equilíbrio rapidamente**.
-	- Esse é o caso em que o circuito atinge o estado estacionário no **menor tempo possível sem oscilações**.
-	- Para esse caso $R = R_c$ e, potanto, $\varepsilon = 1$.
+Neste tópico serão plotados gráficos de tensão e corrente nos circuitos RL e RC como resposta à aplicação de sinais de tensão em forma de degrau.
 """
 
-# ╔═╡ 928f6800-bef6-4d83-84ac-18f224462f4e
-
-
-# ╔═╡ 96395138-161f-47cc-804a-92f1fe5e9689
-md"""
-### Regime Subamortecido ($R^2 < 4L/C$ ou $\alpha^2 < \omega_0^2$)
-
-Neste caso, o discriminante é **negativo**, então as raízes são **complexas conjugadas**:
-
-$$s = -\alpha \pm j\omega_d$$
-
-Em que:
-
-$$\omega_d = \sqrt{\omega_0^2 - \alpha^2}$$
-
-A solução assume a forma:
-
-$$i(t) = e^{-\alpha t} \left(A \cos(\omega_d t) + B \sin(\omega_d t) \right)$$
-
-ou, de forma equivalente:
-
-$$i(t) = A e^{-\alpha t} \cos(\omega_d t + \phi)$$
-
-!!! tip "Características do regime de amortecimento subamortecido"
-	- A corrente apresenta **oscilações amortecidas**, ou seja, oscila mas com **amplitude decrescente** ao longo do tempo.
-	- Quanto menor for $R$, menor é $\alpha$, o que significa que a oscilação dura mais tempo antes de se extinguir.
-	- A frequência de oscilação é **menor** do que a frequência natural $\omega_0$ devido ao amortecimento.
-	- Para esse caso $R < R_c$ e, potanto, $0,0 < \varepsilon < 1,0$.
-"""
-
-# ╔═╡ 223b55d3-dbb9-470f-a51e-69d00949770f
-
-
-# ╔═╡ 8b523674-a1d4-4df9-acc3-9b3c74898aba
-md"""
-### Regime Oscilatório ($R = 0$ ou $\alpha = 0$)
-
-Neste caso, o discriminante é **negativo** e as raízes são **puramente imaginárias**:
-
-$$s = \pm j\omega_d$$
-
-Em que:
-
-$$\omega_d = \omega_0$$
-
-A solução assume a forma:
-
-$$i(t) = A \cos(\omega_d t) + B \sin(\omega_d t)$$
-
-ou, de forma equivalente:
-
-$$i(t) = A \cos(\omega_d t + \phi)$$
-
-!!! tip "Características do regime de amortecimento oscilatório"
-	- A corrente apresenta **oscilações constantes** ao longo do tempo.
-	- Não há dissipação de energia no circuito, que passa a ser um circuito do tipo LC.
-	- A frequência de oscilação é **igual** à frequência natural $\omega_0$.
-	- Para esse caso $R = 0,0$ e, potanto, $\varepsilon = 0,0$.
-	- Esse comportamento não é possível ser observado em montagens reais.
-"""
-
-# ╔═╡ d4029a09-52cb-4a59-a8c0-38f7a949a176
-
-
-# ╔═╡ f1588952-e24d-40ab-9240-8fd6af98add6
-md"""
-## Procedimento Computacional
-"""
-
-# ╔═╡ 0214ccdb-3dff-4d04-8766-e8fb5b6a99ed
-md"""
-Para o circuito abaixo os seguintes valores de indutância e capacitância são fixos:
-
-$L = 1,0~H$
-
-$C = 0.1~F$
-
-Assim, é possível calcular o valor de resistência crítica:
-
-$R_c = 2 \sqrt{\frac{L}{C}}$
-"""
-
-# ╔═╡ 0638c6a5-ab15-456f-a063-2e82937fc06c
+# ╔═╡ b27f7065-832d-421b-bd72-ac145aacc332
 begin
-	# Definição dos parâmetros do circuito
-	L = 1.0                        # Indutância (H)
-	C = 0.1                        # Capacitância (F)
-	V = 5.0                        # Degrau de tensão (V)
+	# Parâmetros do circuito
+	R = 1.0   # Resistência em ohms
+	L = 2.0    # Indutância em henrys
+	C = 1.0    # Capacitância em farads
+	V = 20.0   # Degrau de tensão (V)
+
+	# Tempo de simulação
+	tspan = (0.0, 10.0)
 end
 
-# ╔═╡ 219df9ff-2b36-424e-8a20-6d72b9c87c75
-Rc = 2.0 * √(L/C)
-
-# ╔═╡ 0bd64951-b409-4e77-a2b4-0c2795d1454b
-@bind R Slider(0.0:0.1:20.0, default=1.0, show_value=true)
-
-# ╔═╡ 720c2a2a-5157-49a2-a7ee-d45c8bf7266b
-ε = R / Rc
-
-# ╔═╡ acbfb6a8-0afe-4508-b157-32dea59f1274
-let	
-	# Função para definir a equação diferencial do circuito RLC série
-	function rlc_series!(du, u, p, t)
-	    R, L, C, V = p
-	    du[1] = u[2]  # u[1] = Corrente i(t), u[2] = di/dt
-	    du[2] = -(R/L) * u[2] - (1/(L*C)) * u[1] + V * (1/L) * 1e1 * exp(1e1t) / (1.0 + exp(1e1t))^2
-	end
-	
-	# Condições iniciais
-	u0 = [0.0, 0.0]  # Inicialmente, corrente e derivada da corrente são zero
-	tspan = (0.0, 10.0)  # Intervalo de tempo
-	tdense = 0.1
-	
-	# Criar uma figura para os gráficos
-	Plots.plot(title="Resposta Transitória do Circuito RLC", xlabel="Tempo (s)", ylabel="Corrente (A)")
-	
-	# Resolver para cada regime de amortecimento
-	p = (R, L, C, V)  # Parâmetros do circuito
-	prob = ODEProblem(rlc_series!, u0, tspan, p)  # Criar problema diferencial
-	sol = solve(prob, Tsit5(), saveat=tdense)  # Resolver numericamente
-	    
-	# Determinar tipo de amortecimento
-	α = R / (2 * L)
-	ω0 = 1 / sqrt(L * C)
-	if α > ω0
-		label = "Superamortecido (R=$R Ω)"
-	elseif α == ω0
-	    label = "Criticamente amortecido (R=$R Ω)"
-	else
-	    label = "Subamortecido (R=$R Ω)"
-	end
-	# Plotar solução
-	Plots.plot!(sol.t, sol[1, :], label=label, lw=3, marker=:circle)
-	Plots.plot!(legend=:bottomright)
-			
-end
-
-# ╔═╡ ac54edb2-895d-4f20-88ab-b89e23e196b7
+# ╔═╡ bc1d4dad-d7a6-4f42-acb5-70852297ab67
 begin
-	# Definição dos parâmetros do circuito
-	R_values = [0.0, 1.0, Rc, 20.0]  # Valores diferentes para analisar os regimes de amortecimento
-	
-	# Função para definir a equação diferencial do circuito RLC série
-	function rlc_series!(du, u, p, t)
-	    R, L, C, V = p
-	    du[1] = u[2]  # u[1] = Corrente i(t), u[2] = di/dt
-	    du[2] = -(R/L) * u[2] - (1/(L*C)) * u[1] + V * (1/L) * 1e1 *exp(1e1t) / (1.0 + exp(1e1t))^2
+	# ---- Circuito RL ----
+	function rl_ode(i, p, t)
+	    di_dt = (V - R * i) / L
+	    return di_dt
 	end
 	
-	# Condições iniciais
-	u0 = [0.0, 0.0]  # Inicialmente, corrente e derivada da corrente são zero
-	tspan = (0.0, 10.0)  # Intervalo de tempo
-	tdense = 0.1
-
-	# Criar uma figura para os gráficos
-	Plots.plot(title="Resposta Transitória do Circuito RLC", xlabel="Tempo (s)", ylabel="Corrente (A)")
+	# Condição inicial i(0) = 0
+	i0 = 0.0
+	prob_rl = ODEProblem(rl_ode, i0, tspan)
+	sol_rl = solve(prob_rl, Tsit5())
 	
-	# Resolver para cada regime de amortecimento
-	for R in R_values
-	    p = (R, L, C, V)  # Parâmetros do circuito
-	    prob = ODEProblem(rlc_series!, u0, tspan, p)  # Criar problema diferencial
-	    sol = solve(prob, Tsit5(), saveat=tdense)  # Resolver numericamente
-	    
-	    # Determinar tipo de amortecimento
-		α = R / (2 * L)
-	    ω0 = 1 / sqrt(L * C)
-		if α == 0.0
-			label = "Oscilatorio (R=$R Ω)"
-		elseif α ≈ ω0
-	        label = "Criticamente amortecido (R=$R Ω)"
-		elseif α > ω0
-	        label = "Superamortecido (R=$R Ω)"
-	    else
-	        label = "Subamortecido (R=$R Ω)"
-	    end
-	    
-	    # Plotar solução
-	    Plots.plot!(sol.t, sol[1, :], label=label, lw=3, marker=:circle)
+	# Tensão no indutor
+	vL = V .- R .* sol_rl.u
+end
+
+# ╔═╡ d96b9a2a-e225-4f15-b03f-abe21c124c4f
+begin
+	# ---- Circuito RC ----
+	function rc_ode(vC, p, t)
+	    dvC_dt = (V - vC) / (R * C)
+	    return dvC_dt
 	end
-	Plots.plot!(legend=:bottomright)
-		
+	
+	# Condição inicial vC(0) = 0
+	vC0 = 0.0
+	prob_rc = ODEProblem(rc_ode, vC0, tspan)
+	sol_rc = solve(prob_rc, Tsit5())
+	
+	# Corrente no circuito RC
+	iRC = (V .- sol_rc.u) ./ R
+	
 end
 
-# ╔═╡ a4865a5c-b8b6-47be-82e9-308ecc38a3cf
-md"""
-## Anexo
-"""
-
-# ╔═╡ 20c523ed-8a18-4953-b8ff-4f2fd5182f4b
-md"""
-### Emulação da Função Degrau Unitário via Função Logística
-"""
-
-# ╔═╡ b954fb79-a8bb-4ce1-a18d-2f68c14844bd
-md"""
-Como a modelagem do circuito RLC foi realizada levando em consideração a obtenção de uma resposta em termos da corrente elétrica $i(t)$ no circuito, então a equação diferencial a ser resolvida pelo solver de equações diferenciais é dada por:
-
-$$L \frac{d^2 i(t)}{dt^2} + R \frac{di(t)}{dt} + \frac{1}{C} i(t) = \frac{d v(t)}{dt}$$
-
-Note a presença da função de entrada $v(t)$ e de sua derivada $\frac{d v(t)}{dt}$.
-
-Para o caso de uma função degrau, é uma função não diferenciável. Assim é preciso aproximá-la. Essa função é aproximada com boa precisão pela função logística.
-
-$f(t) = \frac{1}{1 + e^{-at}}$
-
-
-Que tem derivada facilmente obtida pela expressão:
-
-$\frac{d f(t)}{dt} = a \cdot \frac{e^{at}}{(1 + e^{at})^2}$
-
-E que portanto, pode ser facilmente representada na implementação da equação que será passada para o solver de equações diferenciais.
-
-"""
-
-# ╔═╡ 9100111a-0c8e-48cf-8f1e-571d296cb08b
-let
-	t = 0.0:0.1:10.0
-	a = 1e1
-	y = 1.0 ./ (1.0 .+ exp.(-a*t))
-	Plots.plot(t, y)
+# ╔═╡ ca2e5665-e695-4cbc-ad26-7ed18870e5b0
+begin
+	# ---- Plotagem ----
+	plot(sol_rl.t, sol_rl.u, lw=3.0, label="Corrente i(t) [A]", xlabel="Tempo [s]", ylabel="Corrente [A]", title="Resposta do Circuito RL", legend=:bottomright)
+	plot!(sol_rl.t, vL, lw=3.0, label="Tensão no Indutor vL(t) [V]", ylabel="Tensão [V]")
 end
 
-# ╔═╡ 3660a920-1c33-4378-93a3-63b62aa412c6
-md"""
-### Derivada da Função Logística
-
-$\frac{d f(t)}{dt} = a \cdot \frac{e^{at}}{(1 + e^{at})^2}$
-
-"""
-
-# ╔═╡ 1eca2524-9766-4b33-b231-0f7570ad904f
-let
-	t = 0.0:0.1:10.0
-	a = 1e2
-	y = a * exp.(a*t) ./ (1.0 .+ exp.(a*t)).^2
-	Plots.plot(t, y)
+# ╔═╡ 9de105a2-b398-4e78-9b0c-336030f933d3
+begin
+	# ---- Plotagem ----
+	plot(sol_rc.t, sol_rc.u, lw=3.0, label="Tensão no Capacitor vC(t) [V]", xlabel="Tempo [s]", ylabel="Tensão [V]", title="Resposta do Circuito RC", legend=:bottomright)
+	plot!(sol_rc.t, iRC, lw=3.0,  label="Corrente i(t) [A]", ylabel="Corrente [A]")
 end
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
 [deps]
 DifferentialEquations = "0c46a032-eb83-5123-abaf-570d42b7fbaa"
-PlotlyJS = "f0f68f2c-4968-5e81-91da-67840de0976a"
 Plots = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
 PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
 
 [compat]
 DifferentialEquations = "~7.17.0"
-PlotlyJS = "~0.18.15"
 Plots = "~1.41.2"
-PlutoUI = "~0.7.76"
+PlutoUI = "~0.7.75"
 """
 
 # ╔═╡ 00000000-0000-0000-0000-000000000002
@@ -433,7 +281,7 @@ PLUTO_MANIFEST_TOML_CONTENTS = """
 
 julia_version = "1.12.2"
 manifest_format = "2.0"
-project_hash = "c41f7d5f664b24f7f514ea24ee493c7d6957c67f"
+project_hash = "2d8ee6de0065d8275d9056d9721a78aedd9e3a82"
 
 [[deps.ADTypes]]
 git-tree-sha1 = "8b2b045b22740e4be20654175cc38291d48539db"
@@ -557,12 +405,6 @@ weakdeps = ["SparseArrays"]
 uuid = "56f22d72-fd6d-98f1-02f0-08ddc0907c33"
 version = "1.11.0"
 
-[[deps.AssetRegistry]]
-deps = ["Distributed", "JSON", "Pidfile", "SHA", "Test"]
-git-tree-sha1 = "b25e88db7944f98789130d7b503276bc34bc098e"
-uuid = "bf4720bc-e11a-5d0c-854e-bdca1663c893"
-version = "0.1.0"
-
 [[deps.BandedMatrices]]
 deps = ["ArrayLayouts", "FillArrays", "LinearAlgebra", "PrecompileTools"]
 git-tree-sha1 = "3ecdc34639e1b8b8217820af18e5850e8e78f1a7"
@@ -591,12 +433,6 @@ deps = ["Static"]
 git-tree-sha1 = "f21cfd4950cb9f0587d5067e69405ad2acd27b87"
 uuid = "62783981-4cbd-42fc-bca8-16325de8dc4b"
 version = "0.1.6"
-
-[[deps.Blink]]
-deps = ["Base64", "Distributed", "HTTP", "JSExpr", "JSON", "Lazy", "Logging", "MacroTools", "Mustache", "Mux", "Pkg", "Reexport", "Sockets", "WebIO"]
-git-tree-sha1 = "bc93511973d1f949d45b0ea17878e6cb0ad484a1"
-uuid = "ad839575-38b3-5650-b840-f874b8c74a25"
-version = "0.12.9"
 
 [[deps.BoundaryValueDiffEq]]
 deps = ["ADTypes", "BoundaryValueDiffEqAscher", "BoundaryValueDiffEqCore", "BoundaryValueDiffEqFIRK", "BoundaryValueDiffEqMIRK", "BoundaryValueDiffEqMIRKN", "BoundaryValueDiffEqShooting", "DiffEqBase", "FastClosures", "ForwardDiff", "LinearAlgebra", "Reexport", "SciMLBase"]
@@ -821,11 +657,6 @@ deps = ["OrderedCollections"]
 git-tree-sha1 = "e357641bb3e0638d353c4b29ea0e40ea644066a6"
 uuid = "864edb3b-99cc-5e75-8d2d-829cb0a9cfe8"
 version = "0.19.3"
-
-[[deps.DataValueInterfaces]]
-git-tree-sha1 = "bfc1187b79289637fa0ef6d4436ebdfe6905cbd6"
-uuid = "e2d170a0-9d28-54be-80f0-106bbe20a464"
-version = "1.0.0"
 
 [[deps.Dates]]
 deps = ["Printf"]
@@ -1206,12 +1037,6 @@ git-tree-sha1 = "b104d487b34566608f8b4e1c39fb0b10aa279ff8"
 uuid = "77dc65aa-8811-40c2-897b-53d922fa7daf"
 version = "0.1.3"
 
-[[deps.FunctionalCollections]]
-deps = ["Test"]
-git-tree-sha1 = "04cb9cfaa6ba5311973994fe3496ddec19b6292a"
-uuid = "de31a74c-ac4f-5751-b3fd-e18cd04993ca"
-version = "0.5.0"
-
 [[deps.Future]]
 deps = ["Random"]
 uuid = "9fa8497b-333b-5362-9e8d-4d0656e87820"
@@ -1307,12 +1132,6 @@ git-tree-sha1 = "f923f9a774fcf3f5cb761bfa43aeadd689714813"
 uuid = "2e76f6c2-a576-52d4-95c1-20adfe4de566"
 version = "8.5.1+0"
 
-[[deps.Hiccup]]
-deps = ["MacroTools", "Test"]
-git-tree-sha1 = "6187bb2d5fcbb2007c39e7ac53308b0d371124bd"
-uuid = "9fb69e20-1954-56bb-a84f-559cc56a8ff7"
-version = "0.2.2"
-
 [[deps.HypergeometricFunctions]]
 deps = ["LinearAlgebra", "OpenLibm_jll", "SpecialFunctions"]
 git-tree-sha1 = "68c173f4f449de5b438ee67ed0c9c748dc31a2ec"
@@ -1390,17 +1209,17 @@ git-tree-sha1 = "0533e564aae234aff59ab625543145446d8b6ec2"
 uuid = "692b3bcd-3c85-4b1f-b108-f13ce0eb3210"
 version = "1.7.1"
 
-[[deps.JSExpr]]
-deps = ["JSON", "MacroTools", "Observables", "WebIO"]
-git-tree-sha1 = "b413a73785b98474d8af24fd4c8a975e31df3658"
-uuid = "97c1335a-c9c5-57fe-bc5d-ec35cebe8660"
-version = "0.5.4"
-
 [[deps.JSON]]
-deps = ["Dates", "Mmap", "Parsers", "Unicode"]
-git-tree-sha1 = "31e996f0a15c7b280ba9f76636b3ff9e2ae58c9a"
+deps = ["Dates", "Logging", "Parsers", "PrecompileTools", "StructUtils", "UUIDs", "Unicode"]
+git-tree-sha1 = "5b6bb73f555bc753a6153deec3717b8904f5551c"
 uuid = "682c06a0-de6a-54ab-a142-c8b1cf79cde6"
-version = "0.21.4"
+version = "1.3.0"
+
+    [deps.JSON.extensions]
+    JSONArrowExt = ["ArrowTypes"]
+
+    [deps.JSON.weakdeps]
+    ArrowTypes = "31f734f8-188a-4ce0-8406-c8a06bd891cd"
 
 [[deps.Jieko]]
 deps = ["ExproniconLite"]
@@ -1432,12 +1251,6 @@ version = "9.19.2"
     Adapt = "79e6a3ab-5dfb-504d-930d-738a2a938a0e"
     FastBroadcast = "7034ab61-46d4-4ed7-9d0f-46aef9175898"
     KernelAbstractions = "63c18a36-062a-441e-b654-da1e3ab1ce7c"
-
-[[deps.Kaleido_jll]]
-deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
-git-tree-sha1 = "43032da5832754f58d14a91ffbe86d5f176acda9"
-uuid = "f7e6163d-2fa5-5f23-b69c-1db539e41963"
-version = "0.2.1+0"
 
 [[deps.Krylov]]
 deps = ["LinearAlgebra", "Printf", "SparseArrays"]
@@ -1497,12 +1310,6 @@ deps = ["ArrayInterface", "LinearAlgebra", "ManualMemory", "SIMDTypes", "Static"
 git-tree-sha1 = "a9eaadb366f5493a5654e843864c13d8b107548c"
 uuid = "10f19ff3-798f-405d-979b-55457f8fc047"
 version = "0.1.17"
-
-[[deps.Lazy]]
-deps = ["MacroTools"]
-git-tree-sha1 = "1370f8202dac30758f3c345f9909b97f53d87d3f"
-uuid = "50d2b5c4-7a5e-59d5-8109-a42b560f39c0"
-version = "0.15.1"
 
 [[deps.LazyArrays]]
 deps = ["ArrayLayouts", "FillArrays", "LinearAlgebra", "MacroTools", "SparseArrays"]
@@ -1788,18 +1595,6 @@ git-tree-sha1 = "cac9cc5499c25554cba55cd3c30543cff5ca4fab"
 uuid = "46d2c3a1-f734-5fdb-9937-b9b9aeba4221"
 version = "0.2.4"
 
-[[deps.Mustache]]
-deps = ["Printf", "Tables"]
-git-tree-sha1 = "3b2db451a872b20519ebb0cec759d3d81a1c6bcb"
-uuid = "ffc61752-8dc7-55ee-8c37-f3e9cdd09e70"
-version = "1.0.20"
-
-[[deps.Mux]]
-deps = ["AssetRegistry", "Base64", "HTTP", "Hiccup", "MbedTLS", "Pkg", "Sockets"]
-git-tree-sha1 = "7295d849103ac4fcbe3b2e439f229c5cc77b9b69"
-uuid = "a975b10e-0019-58db-a62f-e48ff68538c9"
-version = "1.0.2"
-
 [[deps.NLSolversBase]]
 deps = ["ADTypes", "DifferentiationInterface", "Distributed", "FiniteDiff", "ForwardDiff"]
 git-tree-sha1 = "25a6638571a902ecfb1ae2a18fc1575f86b1d4df"
@@ -1906,11 +1701,6 @@ weakdeps = ["ForwardDiff"]
 
     [deps.NonlinearSolveSpectralMethods.extensions]
     NonlinearSolveSpectralMethodsForwardDiffExt = "ForwardDiff"
-
-[[deps.Observables]]
-git-tree-sha1 = "7438a59546cf62428fc9d1bc94729146d37a7225"
-uuid = "510215fc-4207-5dde-b226-833fc4488ee2"
-version = "0.5.5"
 
 [[deps.Ogg_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl"]
@@ -2193,23 +1983,11 @@ git-tree-sha1 = "0662b083e11420952f2e62e17eddae7fc07d5997"
 uuid = "36c8627f-9965-5494-a995-c6b170f724f3"
 version = "1.57.0+0"
 
-[[deps.Parameters]]
-deps = ["OrderedCollections", "UnPack"]
-git-tree-sha1 = "34c0e9ad262e5f7fc75b10a9952ca7692cfc5fbe"
-uuid = "d96e819e-fc66-5662-9728-84c9c7592b0a"
-version = "0.12.3"
-
 [[deps.Parsers]]
 deps = ["Dates", "PrecompileTools", "UUIDs"]
 git-tree-sha1 = "7d2f8f21da5db6a806faf7b9b292296da42b2810"
 uuid = "69de0a69-1ddd-5017-9359-2bf0b02dc9f0"
 version = "2.8.3"
-
-[[deps.Pidfile]]
-deps = ["FileWatching", "Test"]
-git-tree-sha1 = "2d8aaf8ee10df53d0dfb9b8ee44ae7c04ced2b03"
-uuid = "fa939f87-e72e-5be4-a000-7fc836dbe307"
-version = "1.3.0"
 
 [[deps.Pixman_jll]]
 deps = ["Artifacts", "CompilerSupportLibraries_jll", "JLLWrappers", "LLVMOpenMP_jll", "Libdl"]
@@ -2238,36 +2016,6 @@ git-tree-sha1 = "26ca162858917496748aad52bb5d3be4d26a228a"
 uuid = "995b91a9-d308-5afd-9ec6-746e21dbc043"
 version = "1.4.4"
 
-[[deps.PlotlyBase]]
-deps = ["ColorSchemes", "Dates", "DelimitedFiles", "DocStringExtensions", "JSON", "LaTeXStrings", "Logging", "Parameters", "Pkg", "REPL", "Requires", "Statistics", "UUIDs"]
-git-tree-sha1 = "56baf69781fc5e61607c3e46227ab17f7040ffa2"
-uuid = "a03496cd-edff-5a9b-9e67-9cda94a718b5"
-version = "0.8.19"
-
-[[deps.PlotlyJS]]
-deps = ["Base64", "Blink", "DelimitedFiles", "JSExpr", "JSON", "Kaleido_jll", "Markdown", "Pkg", "PlotlyBase", "PlotlyKaleido", "REPL", "Reexport", "Requires", "WebIO"]
-git-tree-sha1 = "e415b25fdec06e57590a7d5ac8e0cf662fa317e2"
-uuid = "f0f68f2c-4968-5e81-91da-67840de0976a"
-version = "0.18.15"
-
-    [deps.PlotlyJS.extensions]
-    CSVExt = "CSV"
-    DataFramesExt = ["DataFrames", "CSV"]
-    IJuliaExt = "IJulia"
-    JSON3Ext = "JSON3"
-
-    [deps.PlotlyJS.weakdeps]
-    CSV = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
-    DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
-    IJulia = "7073ff75-c697-5162-941a-fcdaad2a7d2a"
-    JSON3 = "0f8b85d8-7281-11e9-16c2-39a750bddbf1"
-
-[[deps.PlotlyKaleido]]
-deps = ["Artifacts", "Base64", "JSON", "Kaleido_jll"]
-git-tree-sha1 = "ba551e47d7eac212864fdfea3bd07f30202b4a5b"
-uuid = "f2990250-8cf9-495f-b13a-cce12b45703c"
-version = "2.2.6"
-
 [[deps.Plots]]
 deps = ["Base64", "Contour", "Dates", "Downloads", "FFMPEG", "FixedPointNumbers", "GR", "JLFzf", "JSON", "LaTeXStrings", "Latexify", "LinearAlgebra", "Measures", "NaNMath", "Pkg", "PlotThemes", "PlotUtils", "PrecompileTools", "Printf", "REPL", "Random", "RecipesBase", "RecipesPipeline", "Reexport", "RelocatableFolders", "Requires", "Scratch", "Showoff", "SparseArrays", "Statistics", "StatsBase", "TOML", "UUIDs", "UnicodeFun", "Unzip"]
 git-tree-sha1 = "7b990898534ea9797bf9bf21bd086850e5d9f817"
@@ -2289,10 +2037,10 @@ version = "1.41.2"
     Unitful = "1986cc42-f94f-5a68-af5c-568840ba703d"
 
 [[deps.PlutoUI]]
-deps = ["AbstractPlutoDingetjes", "Base64", "ColorTypes", "Dates", "Downloads", "FixedPointNumbers", "Hyperscript", "HypertextLiteral", "IOCapture", "InteractiveUtils", "Logging", "MIMEs", "Markdown", "Random", "Reexport", "URIs", "UUIDs"]
-git-tree-sha1 = "0d751d4ceb9dbd402646886332c2f99169dc1cfd"
+deps = ["AbstractPlutoDingetjes", "Base64", "ColorTypes", "Dates", "Downloads", "FixedPointNumbers", "Hyperscript", "HypertextLiteral", "IOCapture", "InteractiveUtils", "JSON", "Logging", "MIMEs", "Markdown", "Random", "Reexport", "URIs", "UUIDs"]
+git-tree-sha1 = "db8a06ef983af758d285665a0398703eb5bc1d66"
 uuid = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
-version = "0.7.76"
+version = "0.7.75"
 
 [[deps.PoissonRandom]]
 deps = ["LogExpFunctions", "Random"]
@@ -2798,6 +2546,20 @@ git-tree-sha1 = "83151ba8065a73f53ca2ae98bc7274d817aa30f2"
 uuid = "7792a7ef-975c-4747-a70f-980b88e8d1da"
 version = "0.5.8"
 
+[[deps.StructUtils]]
+deps = ["Dates", "UUIDs"]
+git-tree-sha1 = "79529b493a44927dd5b13dde1c7ce957c2d049e4"
+uuid = "ec057cc2-7a8d-4b58-b3b3-92acb9f63b42"
+version = "2.6.0"
+
+    [deps.StructUtils.extensions]
+    StructUtilsMeasurementsExt = ["Measurements"]
+    StructUtilsTablesExt = ["Tables"]
+
+    [deps.StructUtils.weakdeps]
+    Measurements = "eff96d63-e80a-5855-80a2-b1b0885c5ab7"
+    Tables = "bd369af6-aec1-5ad0-b16a-f7cc5008161c"
+
 [[deps.StyledStrings]]
 uuid = "f489334b-da3d-4c2e-b8f0-e476e12c162b"
 version = "1.11.0"
@@ -2845,18 +2607,6 @@ version = "0.3.46"
 deps = ["Dates"]
 uuid = "fa267f1f-6049-4f14-aa54-33bafae1ed76"
 version = "1.0.3"
-
-[[deps.TableTraits]]
-deps = ["IteratorInterfaceExtensions"]
-git-tree-sha1 = "c06b2f539df1c6efa794486abfb6ed2022561a39"
-uuid = "3783bdb8-4a98-5b6b-af9a-565f29a5fe9c"
-version = "1.0.1"
-
-[[deps.Tables]]
-deps = ["DataAPI", "DataValueInterfaces", "IteratorInterfaceExtensions", "OrderedCollections", "TableTraits"]
-git-tree-sha1 = "f2c1efbc8f3a609aadf318094f8fc5204bdaf344"
-uuid = "bd369af6-aec1-5ad0-b16a-f7cc5008161c"
-version = "1.12.1"
 
 [[deps.Tar]]
 deps = ["ArgTools", "SHA"]
@@ -2949,24 +2699,6 @@ deps = ["Artifacts", "EpollShim_jll", "Expat_jll", "JLLWrappers", "Libdl", "Libf
 git-tree-sha1 = "96478df35bbc2f3e1e791bc7a3d0eeee559e60e9"
 uuid = "a2964d1f-97da-50d4-b82a-358c7fce9d89"
 version = "1.24.0+0"
-
-[[deps.WebIO]]
-deps = ["AssetRegistry", "Base64", "Distributed", "FunctionalCollections", "JSON", "Logging", "Observables", "Pkg", "Random", "Requires", "Sockets", "UUIDs", "WebSockets", "Widgets"]
-git-tree-sha1 = "0eef0765186f7452e52236fa42ca8c9b3c11c6e3"
-uuid = "0f1e0344-ec1d-5b48-a673-e5cf874b6c29"
-version = "0.8.21"
-
-[[deps.WebSockets]]
-deps = ["Base64", "Dates", "HTTP", "Logging", "Sockets"]
-git-tree-sha1 = "4162e95e05e79922e44b9952ccbc262832e4ad07"
-uuid = "104b5d7c-a370-577a-8038-80a2059c5097"
-version = "1.6.0"
-
-[[deps.Widgets]]
-deps = ["Colors", "Dates", "Observables", "OrderedCollections"]
-git-tree-sha1 = "e9aeb174f95385de31e70bd15fa066a505ea82b9"
-uuid = "cc8bc4a8-27d6-5769-a93b-9d913e69aa62"
-version = "0.6.7"
 
 [[deps.XZ_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl"]
@@ -3230,40 +2962,23 @@ version = "1.13.0+0"
 """
 
 # ╔═╡ Cell order:
-# ╠═282f2886-1bbe-4db4-8392-04519f297754
-# ╠═32c3a9dc-3a74-4d3d-8ea2-6a6357bb18f2
-# ╠═cb00963a-1165-42bc-85a5-fb703f3f1f70
-# ╟─f12b4e6a-e364-11ef-0eab-9bca0fc98997
-# ╟─2e6b3dd5-2722-427d-b67a-33a94492557e
-# ╟─4cda42f6-86f3-443b-acbf-404b3790dcfb
-# ╟─0305d283-af41-4ca6-9aaa-8c42e082cb38
-# ╟─004791e5-b302-4d65-890f-b5f815b166d2
-# ╟─30b9d9c2-2e9f-4782-bfb1-f9c0ee99499c
-# ╟─fb4f7899-d576-41e9-8094-e6939af966f3
-# ╟─f9002a7d-99ae-41a8-844d-11d02a5b1962
-# ╟─ecdddbf3-a36d-4e72-80c9-2230344c1f4e
-# ╟─db44dc00-3506-4b11-8993-58f5184a2715
-# ╟─25cc7275-8d23-4386-9a2a-c7564e19ae9e
-# ╟─fdf8d702-685d-4f02-9730-0cc8040c0806
-# ╟─d961cbd9-257f-4a3f-a7bd-70c5b8b6aa20
-# ╟─928f6800-bef6-4d83-84ac-18f224462f4e
-# ╟─96395138-161f-47cc-804a-92f1fe5e9689
-# ╟─223b55d3-dbb9-470f-a51e-69d00949770f
-# ╟─8b523674-a1d4-4df9-acc3-9b3c74898aba
-# ╟─d4029a09-52cb-4a59-a8c0-38f7a949a176
-# ╟─f1588952-e24d-40ab-9240-8fd6af98add6
-# ╟─0214ccdb-3dff-4d04-8766-e8fb5b6a99ed
-# ╠═0638c6a5-ab15-456f-a063-2e82937fc06c
-# ╠═219df9ff-2b36-424e-8a20-6d72b9c87c75
-# ╠═720c2a2a-5157-49a2-a7ee-d45c8bf7266b
-# ╠═0bd64951-b409-4e77-a2b4-0c2795d1454b
-# ╠═acbfb6a8-0afe-4508-b157-32dea59f1274
-# ╠═ac54edb2-895d-4f20-88ab-b89e23e196b7
-# ╟─a4865a5c-b8b6-47be-82e9-308ecc38a3cf
-# ╟─20c523ed-8a18-4953-b8ff-4f2fd5182f4b
-# ╟─b954fb79-a8bb-4ce1-a18d-2f68c14844bd
-# ╠═9100111a-0c8e-48cf-8f1e-571d296cb08b
-# ╟─3660a920-1c33-4378-93a3-63b62aa412c6
-# ╠═1eca2524-9766-4b33-b231-0f7570ad904f
+# ╠═d74b3117-8562-4b64-b9ae-c804725bebc5
+# ╠═115a404c-67f2-4de4-86a4-eb3438c6a204
+# ╟─8fa20d1f-34d0-4e4e-ba38-4cb46795b6b9
+# ╟─9e39416c-dde5-11ef-2cf5-c143ac28d370
+# ╟─89f1a737-cd23-44b7-8c72-043b50c32550
+# ╟─fa8a0926-777f-451c-b78a-ceb693d4c48b
+# ╟─61072b7d-9aa1-4c9c-baaa-c6c9bf0d9d52
+# ╟─83d1207a-8aff-4b05-b00c-0fc5ffa6d051
+# ╟─84d19f83-93de-4ce1-9d94-802c6f61aeda
+# ╟─db5c7a07-ff6c-4b57-bd0a-4acd013c2de4
+# ╟─364fa9b3-b1da-4b84-b679-6b6cb8800873
+# ╟─24ba4d4c-7f7e-4e2e-8989-13e10dcdc844
+# ╟─fe8ac183-00ab-4980-8e46-a0b835770f41
+# ╠═b27f7065-832d-421b-bd72-ac145aacc332
+# ╠═bc1d4dad-d7a6-4f42-acb5-70852297ab67
+# ╠═d96b9a2a-e225-4f15-b03f-abe21c124c4f
+# ╠═ca2e5665-e695-4cbc-ad26-7ed18870e5b0
+# ╠═9de105a2-b398-4e78-9b0c-336030f933d3
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002

@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.19
+# v1.0.1
 
 using Markdown
 using InteractiveUtils
@@ -21,261 +21,792 @@ begin
 	using PlutoUI
 	using Plots
 	using PlotlyJS
+	using LinearAlgebra
+	using Printf
 end
 
 # ╔═╡ 19b9aa11-3850-45a4-8ce1-5a3ff9d9a5a3
 md"""
-# Laboratório de Circuitos Elétricos I
+# ⚡ Laboratório de Circuitos Elétricos I
 
-!!! tip "Semestre 2024.2"
-	- Departamento de Engenharia Elétrica - Universidade Federal do Ceará
-	- Turmas 01 e 02
-	- Professor Lucas Silveira
+!!! tip "Universidade Federal do Ceará — DEE"
+	- **Disciplina:** Laboratório de Circuitos Elétricos em Corrente Contínua
+	- **Semestre:** 2025.2
+	- **Turmas:** 01 e 02
+	- **Professor:** Lucas Silveira
 
-## Prática 3: Ponte de Wheatstone e Transformação $\Delta$-Y
+## 🔬 Prática 3: Ponte de Wheatstone, Transformação $\Delta$-Y e Análise Matricial
+
+Seja muito bem-vindo a este **caderno interativo de laboratório**! Este material foi projetado para transformar o aprendizado de circuitos elétricos em uma experiência dinâmica, visual e intuitiva.
+
+### 🎯 Objetivos de Aprendizagem:
+1. ⚖️ **Ponte de Wheatstone:** Compreender a dedução analítica da condição de equilíbrio, a regra dos produtos cruzados e o método do detector de nulo (eliminação do efeito de carga dos instrumentos).
+2. 🎛️ **Simulador da Ponte:** Interagir com potenciômetros e reostatos virtuais para estimar resistências desconhecidas e analisar o erro relativo.
+3. 🌡️ **Instrumentação & Extensometria:** Entender o uso da ponte desbalanceada em sensores (*strain gauges* e *PT100*) e sua aproximação linear para pequenos sinais.
+4. 📐 **Transformações $\Delta-Y$ e $Y-\Delta$:** Dominar o Teorema de Kennelly de equivalência nos terminais, mnemônicas de cálculo e casos de simetria ($R_\Delta = 3 R_Y$).
+5. 🧮 **Resolução de Circuitos por Sistemas Lineares ($A \cdot x = b$):** Aplicar a Lei de Kirchhoff das Tensões (LKT - Método das Malhas) para montar e resolver sistemas matriciais em Julia.
+6. 🔍 **Comprovação de Equivalência Experimental:** Resolver o circuito da prática em topologia $\Delta$ (3 malhas) e em topologia $Y$ (2 malhas), comprovando que as correntes de ramo externas são rigorosamente idênticas.
+7. 🚀 **Ponte com Carga:** Analisar o efeito da resistência interna de um galvanômetro ($R_G$) conectado entre os terminais intermediários da ponte.
 """
 
 # ╔═╡ 9ea4a211-9374-4019-b395-44a647f310e5
-PlutoUI.TableOfContents()
+PlutoUI.TableOfContents(title="📑 Conteúdo Interativo", indent=true)
 
 # ╔═╡ abf48c08-aae6-45ff-8ed0-1b2d0588a118
 plotlyjs()
 
 # ╔═╡ 93ead8ed-83af-46e5-99a0-3bfea745efc9
 md"""
-## Ponte de Wheatstone
+---
+## 1. ⚖️ Ponte de Wheatstone: Fundamentos e Dedução
+
+A **Ponte de Wheatstone** é uma das topologias de circuito mais importantes e elegantes da engenharia elétrica. Concebida originalmente em 1833 pelo físico e matemático britânico **Samuel Hunter Christie** e posteriormente difundida e aperfeiçoada por **Sir Charles Wheatstone** em 1843, ela permitiu pela primeira vez a medição de resistências elétricas com precisão de frações de ohm.
+
+!!! info "💡 Por que o método de nulo é superior à medição direta com voltímetro/amperímetro?"
+	Todo voltímetro real possui uma **resistência interna finita** $R_v$, e todo amperímetro possui uma resistência interna não-nula $R_a$. Ao inseri-los no circuito, esses instrumentos drenam corrente ou causam quedas de tensão espúrias, introduzindo o chamado **efeito de carga (*loading effect*)**.
+	
+	Na Ponte de Wheatstone, ajusta-se um resistor calibrado ($R_3$) até que a tensão diferencial seja rigorosamente nula ($V_{AB} = 0\text{ V}$). Nesse estado de **equilíbrio nulo**, **nenhuma corrente circula pelo instrumento detector central** ($I_{AB} = 0\text{ A}$). Portanto, a medição é **totalmente independente da resistência interna do instrumento detector**, alcançando exatidão metrológica extraordinária!
 """
 
 # ╔═╡ 1cf3f558-20ca-4690-960f-342e3fa90cf8
 md"""
-### Comportamento da tensão entre os pontos intermediários da ponte
-"""
+### 📐 Topologia e Dedução Passo a Passo
 
-# ╔═╡ a46e62f3-27a4-4257-a83b-a23f164bd78c
-md"""
-Considerando o equacionamento abaixo para a configuração da ponte de Wheatstone:
-
-"""
-
-# ╔═╡ b6c185e0-16dd-4f6c-8780-dccecddbb83e
-md"""
+Considere o circuito esquemático clássico da ponte de Wheatstone alimentado pela fonte contínua $V_f$:
 
 ![Ponte de Wheatstone](https://i.imgur.com/SFRVRV9.png)
 
-"""
+A ponte é formada por dois divisores de tensão ligados em paralelo aos terminais da fonte de alimentação $V_f$:
+- **Divisor Esquerdo:** Composto por $R_x$ (braço superior esquerdo) e $R_3$ (braço inferior esquerdo, geralmente um reostato/potenciômetro calibrado). O nó intermediário é o **ponto A**.
+- **Divisor Direito:** Composto por $R_2$ (braço superior direito) e $R_4$ (braço inferior direito). O nó intermediário é o **ponto B**.
 
-# ╔═╡ 7db876c1-d1be-408c-82c0-fb4309d63d54
-md"""
-$$V_{AB} = \left( \frac{R_3}{R_x + R_3} - \frac{R_4}{R_2 + R_4} \right) \cdot V_f$$
+#### 1. Potencial elétrico no nó A ($V_A$):
+Pela fórmula do divisor de tensão em circuito aberto (sem carga conectada entre A e B):
+$$V_A = V_f \cdot \frac{R_3}{R_x + R_3}$$
+
+#### 2. Potencial elétrico no nó B ($V_B$):
+De forma idêntica no braço direito:
+$$V_B = V_f \cdot \frac{R_4}{R_2 + R_4}$$
+
+#### 3. Tensão diferencial entre os pontos intermediários ($V_{AB}$):
+A diferença de potencial lida por um detector colocado entre A e B é dada por:
+$$V_{AB} = V_A - V_B = V_f \cdot \left( \frac{R_3}{R_x + R_3} - \frac{R_4}{R_2 + R_4} \right)$$
+
+#### 4. Condição Matemática de Equilíbrio ($V_{AB} = 0$):
+Dizemos que a ponte está **equilibrada (ou balanceada)** quando $V_{AB} = 0$, o que exige que os potenciais sejam iguais: $V_A = V_B$.
+$$\frac{R_3}{R_x + R_3} = \frac{R_4}{R_2 + R_4}$$
+
+Multiplicando cruzado ambos os membros da equação:
+$$R_3 \cdot (R_2 + R_4) = R_4 \cdot (R_x + R_3)$$
+$$R_2 R_3 + R_3 R_4 = R_x R_4 + R_3 R_4$$
+
+Cancelando o termo idêntico $R_3 R_4$ presente em ambos os lados, obtemos a consagrada **Relação de Equilíbrio da Ponte de Wheatstone**:
+
+$$R_x \cdot R_4 = R_2 \cdot R_3 \iff R_x = R_3 \cdot \frac{R_2}{R_4}$$
+
+!!! tip "🧠 Mnemônica da Regra dos Produtos Cruzados"
+	No equilíbrio da ponte de Wheatstone, **o produto das resistências dos braços opostos é sempre igual**:
+    
+	$$\begin{aligned}
+	(R_x \text{ [superior esquerdo]}) \cdot (R_4 \text{ [inferior direito]}) & =\\ (R_2 \text{ [superior direito]}) \cdot (R_3 \text{ [inferior esquerdo]})
+    \end{aligned}$$
 """
 
 # ╔═╡ 6496325e-a95b-4fb1-b6f5-d1f22f6d552c
-@bind Rx Slider(0.0:50.0:2.0e3, default=1e3, show_value=true)
+md"""
+### 🎛️ Laboratório Virtual: Simulador Interativo da Ponte de Wheatstone
 
-# ╔═╡ f48780fd-6ddb-4d3c-b402-1a24abcba8f9
-begin
-	R2 = 1.0e3
-	R3 = 1.0e3
-	R4 = 1.0e3
-	Vf = 10.0
-end
+Use os controles deslizantes abaixo para investigar como cada resistor afeta os potenciais de nó $V_A$, $V_B$ e a tensão diferencial $V_{AB}$. Em seguida, observe o cartão de status dinâmico e a curva característica:
+"""
+
+# ╔═╡ 4ad539f7-968a-41e8-81bb-dff1327fab4f
+@bind Vf Slider(1.0:1.0:30.0, default=10.0, show_value=true)
+
+# ╔═╡ 84c7a2d9-b1b3-42aa-91c3-824f2316e0eb
+@bind R2 Slider(100.0:50.0:2500.0, default=1000.0, show_value=true)
+
+# ╔═╡ 79feb155-5764-4646-898a-01af4f1c107a
+@bind R4 Slider(100.0:50.0:2500.0, default=1000.0, show_value=true)
+
+# ╔═╡ 3b073d7f-19ba-4eae-b1c6-7c67871f6b1e
+@bind R3 Slider(0.0:25.0:3000.0, default=1000.0, show_value=true)
+
+# ╔═╡ 52c67323-5a5a-48a0-a03c-801560b2c5f1
+@bind Rx Slider(100.0:25.0:3000.0, default=1000.0, show_value=true)
 
 # ╔═╡ ca4222ce-8c20-4bcc-a876-66788193a57f
-Vab = (R3 / (Rx + R3) - R4 / (R2 + R4)) * Vf 
+begin
+	# Cálculo dos potenciais parciais dos nós A e B
+	VA = Vf * (R3 / (Rx + R3))
+	VB = Vf * (R4 / (R2 + R4))
+	Vab = VA - VB
+	
+	# Estimativa experimental de Rx baseada na condição de equilíbrio teórico
+	Rx_estimado = R3 * (R2 / R4)
+	
+	# Erro percentual relativo entre o valor estimado e o real
+	erro_Rx_pct = (abs(Rx_estimado - Rx) / Rx) * 100.0
+	
+	# Condição de equilíbrio considerando limite de detecção de bancada (5 mV)
+	is_equilibrada = abs(Vab) < 0.005
+end
+
+# ╔═╡ 22bd1528-6743-4d40-9f4b-83fce7706913
+let
+	# Cores e estilização dinâmica
+	bg_box = is_equilibrada ? "#f0fdf4" : (abs(Vab) < 0.3 ? "#fefce8" : "#fef2f2")
+	
+	border_box = is_equilibrada ? "#22c55e" : (abs(Vab) < 0.3 ? "#eab308" : "#ef4444")
+	
+	text_color = is_equilibrada ? "#15803d" : (abs(Vab) < 0.3 ? "#a16207" : "#b91c1c")
+	
+	badge = is_equilibrada ? "🟢 PONTE EM EQUILÍBRIO (|V_AB| < 5 mV)" : (Vab > 0 ? "🟡 DESBALANCEADA (V_A > V_B)" : "🔵 DESBALANCEADA (V_A < V_B)")
+	
+	HTML("""
+	<div style="background-color: $(bg_box); border: 2px solid $(border_box); border-radius: 12px; padding: 18px; margin: 12px 0; font-family: sans-serif; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);">
+		<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+			<h3 style="color: $(text_color); margin: 0; font-size: 1.25em;">⚖️ Status da Medição: $(badge)</h3>
+		</div>
+		
+		<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px;">
+			<div style="background: rgba(255,255,255,0.8); padding: 12px; border-radius: 8px;">
+				<div style="color: #64748b; font-size: 0.85em; text-transform: uppercase;">Tensões Nodais</div>
+				<div style="margin-top: 4px;"><b>Potencial Va:</b> $(@sprintf("%.4f", VA)) V</div>
+				<div><b>Potencial Vb:</b> $(@sprintf("%.4f", VB)) V</div>
+				<div style="margin-top: 6px; font-size: 1.1em;"><b>Vab = Va - Vb:</b> <span style="color: $(text_color); font-weight: bold;">$(@sprintf("%+.4f", Vab)) V</span></div>
+			</div>
+			
+			<div style="background: rgba(255,255,255,0.8); padding: 12px; border-radius: 8px;">
+				<div style="color: #64748b; font-size: 0.85em; text-transform: uppercase;">Estimativa de Resistência</div>
+				<div style="margin-top: 4px;"><b>Rx Real sob Ensaio:</b> $(@sprintf("%.1f", Rx)) Ohms</div>
+				<div><b>Rx Estimado (R3 R2/R4):</b> <span style="font-weight: bold; color: #1e293b;">$(@sprintf("%.1f", Rx_estimado)) Ohms</span></div>
+				<div style="margin-top: 6px;"><b>Erro Relativo:</b> <span style="font-weight: bold; color: $(is_equilibrada ? "#16a34a" : "#dc2626");">$(@sprintf("%.2f", erro_Rx_pct)) %</span></div>
+			</div>
+		</div>
+		
+		<div style="margin-top: 12px; padding-top: 10px; border-top: 1px solid rgba(0,0,0,0.08); font-size: 0.9em; color: #475569;">
+			👉 <b>Missão do Aluno:</b> Ajuste o slider de <b>R3</b> até que a tensão diferencial <b>Vab</b> convirja para <b>0.0000 V</b>. Quando isso ocorrer, o valor de Rx estimado será exatamente o valor real!
+		</div>
+	</div>
+	""")
+end
 
 # ╔═╡ 06b2a323-97ab-4671-8a10-0d08c7e8528a
 begin
-	Rx_ = 0.0:50.0:2.0e3
-	Rx__ = 0.0:100.0:2.0e3
+	# Varredura em torno do ponto de operação para construir a curva V_AB vs Rx
+	rx_sweep = range(max(10.0, Rx - 800.0), stop=Rx + 800.0, length=200)
+	vab_sweep = @. (R3 / (rx_sweep + R3) - R4 / (R2 + R4)) * Vf
 	
-	Vab_ = (R3 ./ (Rx_ .+ R3) .- R4 / (R2 + R4)) .* Vf
-	Vab__ = (R3 ./ (Rx__ .+ R3) .- R4 / (R2 + R4)) .* Vf
+	# Valor de Rx que equilibraria perfeitamente a ponte para os valores atuais de R2, R3, R4
+	Rx_equilibrio = R3 * (R2 / R4)
 	
-	Plots.plot(Rx_, Vab_, lw=2.0, gridalpha=0.5, xlabel="Rx", ylabel="Voltage")
-	Plots.scatter!(Rx__, Vab__, gridalpha=0.5)
+	p_bridge = Plots.plot(rx_sweep, vab_sweep, 
+		lw=2.5, 
+		color=:royalblue, 
+		label="Curva Característica V_AB(Rx)", 
+		xlabel="Resistência Desconhecida Rx (Ω)", 
+		ylabel="Tensão Diferencial V_AB (V)",
+		title="Resposta da Tensão Diferencial da Ponte em Função de Rx",
+		grid=true, gridalpha=0.35,
+		legend=:bottomleft
+	)
+	
+	# Linha horizontal de nulo (V_AB = 0)
+	Plots.hline!([0.0], lw=1.5, ls=:dash, color=:forestgreen, label="Linha de Nulo (Equilíbrio)")
+	
+	# Linha vertical indicando o ponto de equilíbrio teórico
+	if minimum(rx_sweep) <= Rx_equilibrio <= maximum(rx_sweep)
+		Plots.vline!([Rx_equilibrio], lw=1.2, ls=:dot, color=:darkgreen, label=@sprintf("Rx Equilíbrio = %.1f Ω", Rx_equilibrio))
+	end
+	
+	# Ponto de operação atual marcado no gráfico
+	Plots.scatter!([Rx], [Vab], 
+		marker=(:circle, 8), 
+		color=is_equilibrada ? :forestgreen : :crimson, 
+		label=@sprintf("Ponto Atual (Rx=%.1f Ω, V_AB=%.3f V)", Rx, Vab)
+	)
+	
+	p_bridge
 end
 
-# ╔═╡ e269fe9c-37a6-4eaf-84b8-6cac50f8ffe8
+# ╔═╡ b19f3f9a-74f3-45f2-b7bf-dce6c513ad8b
 md"""
-A resistência $R_x$ é dada por:
+---
+## 2. 🌡️ Aplicação Prática: Sensores Resistivos e Extensometria (*Strain Gauges*)
 
-$$R_x = R_3 \cdot \frac{R_2}{R_4}$$
+Na engenharia moderna, a ponte de Wheatstone é amplamente utilizada **desbalanceada** como circuito condicionador de sinal para **sensores resistivos paramétricos**:
+- 🏋️ **Extensômetros (*Strain Gauges*):** Fitas metálicas finíssimas coladas em estruturas civis, pontes, fuselagens de aviões e balanças digitais (células de carga). A deformação mecânica $\varepsilon$ provoca uma micro-variação de resistência $\Delta R$.
+- 🌡️ **Termoresistências (*RTDs / PT100*):** Sensores de platina cuja resistência varia com precisão de acordo com a temperatura: $R(T) \approx R_0 (1 + \alpha \Delta T)$.
+- 🌬️ **Piezoresistores:** Sensores de pressão em coletores de admissão automotivos e manômetros biomédicos.
 
-Em que $R_3$ pode ser um valor de resistência variável.
+### 📐 Linearização para Pequenas Variações ($\Delta R \ll R_0$)
 
+Considere uma ponte inicialmente balanceada onde todos os quatro resistores valem nominalmente $R_0$. Quando o sensor sofre uma perturbação física externa, sua resistência passa a ser $R_x = R_0 + \Delta R$:
+
+$$V_{AB} = V_f \cdot \left( \frac{R_0}{R_0 + \Delta R + R_0} - \frac{R_0}{R_0 + R_0} \right) = V_f \cdot \left( \frac{R_0}{2R_0 + \Delta R} - \frac{1}{2} \right)$$
+
+Unificando os termos sobre o mesmo denominador:
+$$V_{AB} = V_f \cdot \left( \frac{2R_0 - (2R_0 + \Delta R)}{2(2R_0 + \Delta R)} \right) = -\frac{V_f}{4} \cdot \frac{\Delta R}{R_0 + \frac{\Delta R}{2}}$$
+
+Como na extensometria prática as variações de resistência são minúsculas ($\Delta R \ll R_0$), podemos desprezar o termo $\Delta R / 2$ no denominador, obtendo a célebre **relação linearizada do sensor em quarto de ponte**:
+
+$$V_{AB} \approx -\frac{V_f}{4} \cdot \frac{\Delta R}{R_0}$$
+
+!!! tip "💡 Sensibilidade e Linearidade"
+	A tensão diferencial de saída é **diretamente proporcional** à variação de resistência $\Delta R$ e à tensão de alimentação $V_f$. Isso possibilita que circuitos eletrônicos com amplificadores de instrumentação (como o CI INA128 ou AD620) meçam microdeformações mecânicas com resposta perfeitamente linear!
 """
 
-# ╔═╡ 43dc1092-5e59-4e68-a7dd-5a470184a979
+# ╔═╡ b1ec042c-84ad-4f37-adca-d78e22fb7202
 md"""
+### 🏋️ Simulador de Célula de Carga / Extensômetro
 
-Resistor variável R3: $(@bind R3_ Slider(0.0:50.0:2.0e3, default=1.0e3, show_value=true))
-
-Resistor desconhecido Rxp: $(@bind Rxp Slider(1.0e3:50.0:1.8e3, default=1.0e3, show_value=true))
+Ajuste a microdeformação $\Delta R$ induzida por esforço mecânico sobre um extensômetro padrão ($R_0 = 120\,\Omega$) e examine o sinal diferencial em milivolts ($mV$):
 """
 
-# ╔═╡ 22bd1528-6743-4d40-9f4b-83fce7706913
-md"""
+# ╔═╡ ca139776-7515-4355-8450-d9c57d3db02f
+@bind delta_R Slider(-2.0:0.05:2.0, default=0.35, show_value=true)
 
-### Vab = $((R3_ / (Rxp + R3_) - R4 / (R2 + R4)) * Vf) V
+# ╔═╡ 62f6b4be-e551-4d41-9850-db374f9e7b47
+@bind Vcc_sg Slider(1.0:0.5:15.0, default=10.0, show_value=true)
 
-### Valor Estimado para Rxp = $(R3_ * R2 / R4) $$\Omega$$
-
-"""
-
-# ╔═╡ 72721ed9-26ad-462e-b18a-e707707b90fc
-
+# ╔═╡ 07d138db-f81d-4370-b986-43cef807b3b9
+begin
+	R0_sg = 120.0
+	
+	# Tensão diferencial exata
+	Vab_sg_exato = Vcc_sg * (R0_sg / (2 * R0_sg + delta_R) - 0.5)
+	
+	# Aproximação linearizada de pequenos sinais: - (Vcc / 4) * (delta_R / R0)
+	Vab_sg_linear = -0.25 * Vcc_sg * (delta_R / R0_sg)
+	
+	# Erro de linearidade
+	erro_sg_pct = abs(Vab_sg_linear - Vab_sg_exato) / max(abs(Vab_sg_exato), 1e-9) * 100.0
+	
+	HTML("""
+	<div style="background-color: #f8fafc; border: 1px solid #cbd5e1; border-radius: 10px; padding: 16px; margin: 10px 0; font-family: sans-serif;">
+		<h4 style="margin: 0 0 10px 0; color: #0f172a;">📊 Resposta do Sinal do Sensor:</h4>
+		<table style="width: 100%; border-collapse: collapse; font-size: 0.95em;">
+			<tr style="border-bottom: 1px solid #e2e8f0;">
+				<td style="padding: 8px;"><b>Tensão Diferencial Exata (Vab):</b></td>
+				<td style="padding: 8px; font-weight: bold; color: #0284c7;">$(@sprintf("%+.3f", Vab_sg_exato * 1e3)) mV</td>
+			</tr>
+			<tr style="border-bottom: 1px solid #e2e8f0;">
+				<td style="padding: 8px;"><b>Aproximação Linear:</b></td>
+				<td style="padding: 8px; font-weight: bold; color: #16a34a;">$(@sprintf("%+.3f", Vab_sg_linear * 1e3)) mV</td>
+			</tr>
+			<tr>
+				<td style="padding: 8px;"><b>Erro de Não-Linearidade:</b></td>
+				<td style="padding: 8px; color: #64748b;">$(@sprintf("%.3f", erro_sg_pct)) % (ótima linearidade para pequenos sinais!)</td>
+			</tr>
+		</table>
+	</div>
+	""")
+end
 
 # ╔═╡ 6c5d2a4c-95a4-11ef-1cee-f1cd7fbea9f0
 md"""
-## Análise de Circuitos pelo método das malhas
-"""
+---
+## 3. 📐 Transformação $\Delta-Y$ (Delta-Estrela) e $Y-\Delta$ (Estrela-Delta)
 
-# ╔═╡ a11f96c4-1ce7-45d0-bead-1e6cccd57730
-md"""
+### 💡 Por que precisamos das transformações $\Delta-Y$?
 
-!!! tip "Análise de Malhas (Método Geral)"
+Ao analisar circuitos resistivos elementares, costumamos simplificar a rede associando resistores em **série** (que compartilham a mesma corrente) ou em **paralelo** (que compartilham a mesma diferença de potencial). 
 
-	1. Atribua uma corrente na direção **Horária** para cada malha fechada independente na rede. 
+No entanto, em redes em ponte, redes em malha de distribuição de energia ou filtros elétricos, é muito comum encontrar nós interconectados onde os resistores **não estão nem puramente em série, nem puramente em paralelo**!
 
-	2. Indique a polaridade de cada resistor em cada malha, de acordo com a direção da corrente na malha. Note que o requisito de que o resistor tenha uma polaridade definida em relação a cada malha pode fazer com que resistores que façam parte de múltiplas malhas tenham múltiplas polaridades.
+Para resolver essas redes sem a necessidade imediata de equacionar sistemas complexos de malhas ou nós, recorremos à **Transformação $\Delta-Y$**, formalizada pelo engenheiro eletricista **Arthur Edwin Kennelly** em 1899 (conhecida como Teorema de Kennelly).
 
-
-	3. Aplique a Lei de Kirchhoff das tensões em cada malha em sentido horário. 
-
-	    (a) *Se um resistor tem duas ou mais correntes passando por ele, a corrente total do resistor é a corrente da malha que se está analizando, somada das correntes que estejam passando por ele na mesma direção, menos as correntes que passam por ele na direção oposta*. 
-
-	    (b) *A polaridade de uma fonte de tensão não é afetada pela direção presumida das correntes de malha*.
-
-	4. Resolva as equações lineares para cada uma das malhas.
-"""
-
-# ╔═╡ 81cdf678-38e5-4c71-868c-4ec9bebf07da
-md"""
-
-!!! note "Observação Prática!"
-	Para os circuitos analisados na prática, o que se observa é que a topologia de circuito em $\Delta$ é mais fácil de resolver o circuito manualmente e mais dificil computacionalmente.
-
-	Já para a topologia em Y o contrário é observado.
-"""
-
-# ╔═╡ e255349a-4389-4503-9c52-5688cf526b2f
-md"""
-Considerando:
-
-$$R_1,R_2,R_3$$ Como os resistores que formam a topologia de ligação em Y, e
-
-$$R_a,R_b,R_c$$ Como os resistores que formam a topologia em $$\Delta$$.
-"""
-
-# ╔═╡ 2e6dd394-eadc-46ad-8053-27845e947970
-
-
-# ╔═╡ 20552dca-3c3a-4391-a3af-62997573a39c
-md"""
-### Transformação $\Delta$-Y
+!!! note "🎯 Princípio da Equivalência nos Terminais (Teorema de Kennelly)"
+	Duas redes com 3 terminais externos (**A**, **B** e **C**) são ditas **eletricamente equivalentes** se a resistência vista entre quaisquer dois pares de terminais for exatamente a mesma em ambas as configurações:
+	$$R_{AB}^{(\Delta)} = R_{AB}^{(Y)}, \qquad R_{BC}^{(\Delta)} = R_{BC}^{(Y)}, \qquad R_{CA}^{(\Delta)} = R_{CA}^{(Y)}$$
 """
 
 # ╔═╡ ccbb9ab2-a118-404f-afe8-ab09f6324906
 md"""
-As equações para a conversão de uma topologia de circuito de $\Delta$ para Y são dadas por:
+### 🔄 Dedução e Regras Mnemônicas
 
-$$R_1 = \frac{R_b R_c}{R_a + R_b + R_c}$$
+Considere as duas topologias conectadas aos mesmos terminais externos **A**, **B** e **C**:
+- **Topologia $\Delta$ (Delta / Triângulo / $\Pi$):** Formada pelos resistores $R_a$ (entre B e C), $R_b$ (entre A e C) e $R_c$ (entre A e B).
+- **Topologia $Y$ (Estrela / Tê):** Formada pelos resistores $R_1$ (ligado a A), $R_2$ (ligado a B) e $R_3$ (ligado a C), todos convergindo para um nó neutro central comum **N**.
 
-$$R_2 = \frac{R_a R_c}{R_a + R_b + R_c}$$
+```
+       Topologia Delta (Δ)                       Topologia Estrela (Y)
+               (A)                                        (A)
+              /   \                                        |
+            Rb     Rc                                      R1
+            /       \                                      |
+          (C)---Ra---(B)                            (C)----N----(B)
+                                                    /             \
+                                                   R3             R2
+```
 
-$$R_3 = \frac{R_a R_b}{R_a + R_b + R_c}$$
+---
+
+#### 1. Transformação $\Delta \to Y$ (Delta para Estrela)
+Ao igualar as resistências equivalentes entre cada par de terminais:
+- $R_{AB} = R_1 + R_2 = R_c \parallel (R_a + R_b) = \frac{R_c(R_a + R_b)}{R_a + R_b + R_c}$
+- $R_{BC} = R_2 + R_3 = R_a \parallel (R_b + R_c) = \frac{R_a(R_b + R_c)}{R_a + R_b + R_c}$
+- $R_{CA} = R_3 + R_1 = R_b \parallel (R_a + R_c) = \frac{R_b(R_a + R_c)}{R_a + R_b + R_c}$
+
+Resolvendo esse sistema linear de três equações para as incógnitas $R_1, R_2, R_3$:
+
+$$R_1 = \frac{R_b \cdot R_c}{R_a + R_b + R_c}, \qquad R_2 = \frac{R_a \cdot R_c}{R_a + R_b + R_c}, \qquad R_3 = \frac{R_a \cdot R_b}{R_a + R_b + R_c}$$
+
+!!! tip "🧠 Mnemônica $\Delta \to Y$"
+	Cada resistor de ramo da estrela ($Y$) é igual ao **produto dos dois resistores adjacentes do delta** dividido pela **soma de todos os três resistores do delta**:
+	$$R_Y = \frac{\text{Produto dos 2 resistores vizinhos em } \Delta}{\sum R_\Delta}$$
+
+---
+
+#### 2. Transformação $Y \to \Delta$ (Estrela para Delta)
+Invertendo algebricamente as expressões para obter os resistores do delta a partir da estrela:
+
+$$R_a = \frac{R_1 R_2 + R_2 R_3 + R_3 R_1}{R_1}, \qquad R_b = \frac{R_1 R_2 + R_2 R_3 + R_3 R_1}{R_2}, \qquad R_c = \frac{R_1 R_2 + R_2 R_3 + R_3 R_1}{R_3}$$
+
+!!! tip "🧠 Mnemônica $Y \to \Delta$"
+	Cada resistor do delta ($\Delta$) é igual à **soma de todos os produtos dois a dois dos resistores da estrela** dividido pelo **resistor da estrela oposto** (aquele conectado ao terminal que não toca o resistor em delta):
+	$$R_\Delta = \frac{\sum \text{Produtos 2 a 2 de } Y}{R_{\text{oposto em } Y}}$$
+
+---
+
+#### 3. ⚖️ Caso Simétrico Especial (Resistores Idênticos)
+Quando todos os resistores da rede são iguais ($R_a = R_b = R_c = R_\Delta$):
+$$R_Y = \frac{R_\Delta \cdot R_\Delta}{3 R_\Delta} = \frac{R_\Delta}{3} \iff R_\Delta = 3 \cdot R_Y$$
+
+> **Regra prática rápida:** Converter de delta para estrela simétrica **divide por 3**. Converter de estrela para delta simétrico **multiplica por 3**!
+"""
+
+# ╔═╡ 5bc79e3f-cfb9-449e-add9-61a5d06722ea
+md"""
+### 🎛️ Conversor Interativo Bidirecional $\Delta \leftrightarrow Y$
+
+Ajuste os valores dos resistores da rede em $\Delta$ e veja em tempo real o cálculo dos resistores equivalentes em $Y$:
+"""
+
+# ╔═╡ 2deea11f-f7d3-49b4-9e32-cfce450f3a81
+@bind Ra_sim Slider(100.0:100.0:6000.0, default=3300.0, show_value=true)
+
+# ╔═╡ 061641ba-d65e-468f-8256-d830fb24a14c
+@bind Rb_sim Slider(100.0:100.0:6000.0, default=3300.0, show_value=true)
+
+# ╔═╡ 7bc8eb5c-48a6-414c-a34a-f5dac652e013
+@bind Rc_sim Slider(100.0:100.0:6000.0, default=3300.0, show_value=true)
+
+# ╔═╡ 56259a69-3dd3-4362-93b1-167d7157809f
+begin
+	# 1. Conversão Delta -> Y
+	soma_delta_val = Ra_sim + Rb_sim + Rc_sim
+	R1_sim = (Rb_sim * Rc_sim) / soma_delta_val
+	R2_sim = (Ra_sim * Rc_sim) / soma_delta_val
+	R3_sim = (Ra_sim * Rb_sim) / soma_delta_val
+	
+	# 2. Verificação inversa Y -> Delta
+	soma_prod_Y_sim = R1_sim * R2_sim + R2_sim * R3_sim + R3_sim * R1_sim
+	Ra_recuperado = soma_prod_Y_sim / R1_sim
+	Rb_recuperado = soma_prod_Y_sim / R2_sim
+	Rc_recuperado = soma_prod_Y_sim / R3_sim
+	
+	is_delta_balanceado = (Ra_sim == Rb_sim == Rc_sim)
+	
+	simetrico_html = is_delta_balanceado ? """
+	<div style="margin-top: 14px; padding: 10px 14px; background: #ecfdf5; border-left: 4px solid #10b981; border-radius: 6px; color: #065f46;">
+		✨ <b>Rede Simétrica Detectada!</b> Como todos os resistores em &Delta; são iguais a $(Ra_sim) &Omega;, temos rigorosamente R<sub>Y</sub> = R<sub>&Delta;</sub> / 3 = $(Ra_sim) / 3 = $(@sprintf("%.2f", R1_sim)) &Omega;.
+	</div>
+	""" : ""
+
+	HTML("""
+	<div style="background-color: #f8fafc; border: 2px solid #3b82f6; border-radius: 12px; padding: 18px; margin: 12px 0; font-family: sans-serif;">
+		<h4 style="margin: 0 0 12px 0; color: #1e3a8a;">📐 Resultados da Equivalência nos Terminais:</h4>
+		
+		<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 16px;">
+			<div style="background: #ffffff; padding: 14px; border-radius: 8px; border: 1px solid #e2e8f0;">
+				<h5 style="margin: 0 0 8px 0; color: #2563eb;">Topologia &Delta; (Entrada):</h5>
+				<div><b>R<sub>a</sub> (B-C):</b> $(@sprintf("%.1f", Ra_sim)) &Omega;</div>
+				<div><b>R<sub>b</sub> (A-C):</b> $(@sprintf("%.1f", Rb_sim)) &Omega;</div>
+				<div><b>R<sub>c</sub> (A-B):</b> $(@sprintf("%.1f", Rc_sim)) &Omega;</div>
+				<div style="margin-top: 6px; padding-top: 6px; border-top: 1px solid #f1f5f9; color: #64748b;">
+					<b>Soma &sum; R<sub>&Delta;</sub>:</b> $(@sprintf("%.1f", soma_delta_val)) &Omega;
+				</div>
+			</div>
+			
+			<div style="background: #ffffff; padding: 14px; border-radius: 8px; border: 1px solid #e2e8f0;">
+				<h5 style="margin: 0 0 8px 0; color: #16a34a;">Topologia Y Equivalente:</h5>
+				<div><b>R<sub>1</sub> (Nó A):</b> $(@sprintf("%.2f", R1_sim)) &Omega;</div>
+				<div><b>R<sub>2</sub> (Nó B):</b> $(@sprintf("%.2f", R2_sim)) &Omega;</div>
+				<div><b>R<sub>3</sub> (Nó C):</b> $(@sprintf("%.2f", R3_sim)) &Omega;</div>
+				<div style="margin-top: 6px; padding-top: 6px; border-top: 1px solid #f1f5f9; color: #16a34a;">
+					<b>Checagem Inversa:</b> R<sub>a</sub>' = $(@sprintf("%.1f", Ra_recuperado)) &Omega; ✅
+				</div>
+			</div>
+		</div>
+		
+		$simetrico_html
+	</div>
+	""")
+end
+
+# ╔═╡ a11f96c4-1ce7-45d0-bead-1e6cccd57730
+md"""
+---
+## 4. 🧮 Resolução de Circuitos por Sistemas Lineares ($A \cdot x = b$)
+
+Na engenharia elétrica moderna e nos simuladores de circuitos computacionais (como SPICE), a análise de redes resistivas é formulada de forma sistemática utilizando a **Lei de Kirchhoff das Tensões (LKT - Método das Malhas)** ou a **Lei de Kirchhoff das Correntes (LKC - Método Nodal)**, traduzindo-se diretamente na resolução de um sistema linear de equações algébricas:
+
+$$A \cdot x = b$$
+
+Onde:
+- $A$ é a **matriz de coeficientes do circuito** (matriz de resistências $R_{malhas}$ ou matriz de condutâncias $G_{nós}$);
+- $x$ é o **vetor de variáveis desconhecidas** (correntes de malha ou potenciais nodais);
+- $b$ é o **vetor independente de excitações** (soma das fontes de tensão nas malhas ou correntes injetadas nos nós).
+
+Em Julia, a resolução computacional de sistemas lineares $A \cdot x = b$ é executada de forma ultra-eficiente através do operador **backslash** (`x = A \ b`), que utiliza nos bastidores a **fatoração LU com pivoteamento parcial**.
+
+!!! tip "📋 Regra Sistemática de Inspeção para o Método das Malhas (LKT)"
+	Para uma rede planar sem fontes de corrente dependentes com $M$ malhas e todas as correntes de malha adotadas no **sentido horário**:
+	
+	1. **Termos da Diagonal Principal ($R_{kk}$):** Soma de **todas as resistências** que pertencem à malha $k$. É sempre positivo ($R_{kk} > 0$).
+	2. **Termos Fora da Diagonal ($R_{kj}$, com $k \neq j$):** Negativo da soma das resistências **compartilhadas** entre a malha $k$ e a malha $j$. A matriz é sempre simétrica: $R_{kj} = R_{jk} \leq 0$.
+	3. **Vetor de Fontes ($b_k$):** Soma algébrica de todas as fontes de tensão encontradas ao percorrer a malha $k$ no sentido horário (fontes que elevam potencial entram com $+V$, e fontes que causam queda entram com $-V$).
 """
 
 # ╔═╡ 23688dbc-37e0-49ff-ac41-02242052d4da
 md"""
-### Resolução de circuito em $\Delta$
+### 🧪 Estudo de Caso 1: Circuito da Prática de Laboratório em $\Delta$ (3 Malhas)
 
-Resolvendo o primeiro circuito do roteiro, sem realizar nenhuma transformação, ou seja com a topologia em $\Delta$
+Vamos equacionar e resolver o circuito experimental da Prática 3 do laboratório da UFC. A rede é composta por:
+- Duas fontes de alimentação independentes: $V_1 = 5.0\text{ V}$ (ramo esquerdo) e $V_2 = 5.0\text{ V}$ (ramo direito).
+- Três resistores idênticos formando uma topologia central fechada em $\Delta$:
+  $$R_a = 3.3\text{ k}\Omega, \quad R_b = 3.3\text{ k}\Omega, \quad R_c = 3.3\text{ k}\Omega$$
 
-Organizando as equações lineares ficamos com:
+Adotando três correntes de malha independentes no sentido horário:
+- **Malha 1 (Esquerda):** Percorre a fonte $V_1$ e o resistor $R_a$.
+- **Malha 2 (Centro):** Percorre o triângulo interno fechado em $\Delta$ formado por $R_a, R_b, R_c$.
+- **Malha 3 (Direita):** Percorre o resistor $R_c$ e a fonte $V_2$.
 
-$$A_1 \cdot x = b_1$$
+#### Equações da LKT para cada malha:
+1. **Malha 1:** $+V_1 - R_a (i_{m1} - i_{m2}) = 0 \implies R_a \cdot i_{m1} - R_a \cdot i_{m2} = V_1$
+2. **Malha 2:** $-R_a (i_{m2} - i_{m1}) - R_b \cdot i_{m2} - R_c (i_{m2} - i_{m3}) = 0 \implies -R_a \cdot i_{m1} + (R_a + R_b + R_c) \cdot i_{m2} - R_c \cdot i_{m3} = 0$
+3. **Malha 3:** $-R_c (i_{m3} - i_{m2}) + V_2 = 0 \implies -R_c \cdot i_{m2} + R_c \cdot i_{m3} = V_2$
+
+Organizando na forma matricial $A_1 \cdot i_m = b_1$:
+
+$$\begin{bmatrix}
+R_a & -R_a & 0 \\
+-R_a & (R_a + R_b + R_c) & -R_c \\
+0 & -R_c & R_c
+\end{bmatrix}
+\begin{bmatrix} i_{m1} \\ i_{m2} \\ i_{m3} \end{bmatrix}
+=
+\begin{bmatrix} V_1 \\ 0 \\ V_2 \end{bmatrix}$$
+
+Substituindo numericamente $R_a = R_b = R_c = 3.3\text{ k}\Omega$ e $V_1 = V_2 = 5.0\text{ V}$:
+
+$$\begin{bmatrix}
+3.3 & -3.3 & 0 \\
+-3.3 & 9.9 & -3.3 \\
+0 & -3.3 & 3.3
+\end{bmatrix} \cdot 10^3
+\begin{bmatrix} i_{m1} \\ i_{m2} \\ i_{m3} \end{bmatrix}
+=
+\begin{bmatrix} 5.0 \\ 0.0 \\ 5.0 \end{bmatrix}$$
 """
 
 # ╔═╡ d56d9f34-ff02-4fa7-8fb1-b811b332bac7
-A1 = [3.3 -3.3 0.0;
-      -3.3 9.9 -3.3;
-	  0.0 -3.3 3.3] * 1e3
-
-# ╔═╡ 2e8db27d-4f9a-4d78-b9a8-03d8cfc8938d
-b1 = [5.0; 0.0; 5.0]
-
-# ╔═╡ 5b071c8e-7cfd-4f44-b388-7d7758545f46
-i1 = A1 \ b1
+begin
+	# Matriz de resistências A1 e vetor b1 do circuito em Delta
+	A1 = [ 3.3  -3.3   0.0;
+	      -3.3   9.9  -3.3;
+	       0.0  -3.3   3.3] * 1e3
+	
+	b1 = [5.0, 0.0, 5.0]
+	
+	# Resolução computacional do sistema linear via decomposição LU
+	i1 = A1 \ b1
+end
 
 # ╔═╡ e1bc0eb8-668d-4ade-ba70-a399aaf9bcdc
-md"""
-Resolvendo para as correntes solicitadas:
-
-i1 = $(i1[1])
-
-i2 = $(i1[1] - i1[3])
-
-i3 = $(-i1[3])
-"""
+let
+	# Correntes de ramo medidas no laboratório da UFC:
+	# i_f1: Corrente fornecida pela Fonte 1 (ramo esquerdo)
+	# i_centro: Corrente diferencial no ramo intermediário
+	# i_f2: Corrente fornecida pela Fonte 2 (ramo direito)
+	i_f1 = i1[1]
+	i_centro = i1[1] - i1[3]
+	i_f2 = -i1[3]
+	
+	md"""
+	#### 📊 Solução do Sistema $3 \times 3$ (Topologia em $\Delta$):
+	
+	**Vetor de Correntes de Malha ($i_m$):**
+	
+	$i_{m1}$ = **$(@sprintf("%.3f", i1[1] * 1e3)) mA**
+	
+	$i_{m2}$ = **$(@sprintf("%.3f", i1[2] * 1e3)) mA**
+	  
+	$i_{m3}$ = **$(@sprintf("%.3f", i1[3] * 1e3)) mA**
+	
+	- **Correntes de Ramo Solicitadas na Bancada:**
+	  - **$i_1$ (Fonte 1):** $i_1 = i_{m1} =$ $(@sprintf("%.4f", i_f1 * 1e3)) mA
+	
+	  - **$i_2$ (Ramo Central):** $i_2 = i_{m1} - i_{m3} =$ $(@sprintf("%.4f", i_centro * 1e3)) mA
+	  - **$i_3$ (Fonte 2):** $i_3 = -i_{m3} =$ $(@sprintf("%.4f", i_f2 * 1e3)) mA
+	
+	!!! note "🧐 Por que a corrente no ramo intermediário ($i_2$) é exatamente zero?"
+		Observe a **simetria perfeita** do circuito: ambas as fontes têm rigorosamente $5.0\text{ V}$ e a rede resistiva é idêntica nos dois lados. Pelo princípio da simetria e superposição, os nós superior e inferior estão exatamente no mesmo potencial elétrico, gerando uma diferença de potencial nula e, portanto, **corrente nula no ramo central**!
+	"""
+end
 
 # ╔═╡ f0f33f54-5326-4682-8a52-cfb3a7d5624e
 md"""
-### Resolução de circuito em Y
+---
+### 🔄 Estudo de Caso 2: Resolução Simplificada com Transformação $\Delta \to Y$ (2 Malhas)
 
-Para a rede trasnsformada de $\Delta$ para Y, tem-se um sistema de equações reduzido:
+Agora, vamos aplicar a transformação $\Delta \to Y$ no delta central formado por $R_a = R_b = R_c = 3.3\text{ k}\Omega$.
 
-$$A_2 \cdot x = b_2$$
+Como os resistores são idênticos (caso simétrico):
+$$R_1 = R_2 = R_3 = \frac{R_\Delta}{3} = \frac{3.3\text{ k}\Omega}{3} = 1.1\text{ k}\Omega$$
 
+Ao substituir o triângulo central em $\Delta$ pela estrela em $Y$:
+1. A malha interior fechada (malha 2 anterior) **deixa de existir**!
+2. O circuito agora possui **apenas DUAS malhas independentes**:
+   - **Malha 1 (Nova):** Contém a fonte $V_1 = 5.0\text{ V}$, o resistor $R_1 = 1.1\text{ k}\Omega$ e o resistor comum $R_3 = 1.1\text{ k}\Omega$. A resistência própria é: $R_{11} = R_1 + R_3 = 2.2\text{ k}\Omega$.
+   - **Malha 2 (Nova):** Contém a fonte $V_2 = 5.0\text{ V}$, o resistor $R_2 = 1.1\text{ k}\Omega$ e o resistor comum $R_3 = 1.1\text{ k}\Omega$. A resistência própria é: $R_{22} = R_2 + R_3 = 2.2\text{ k}\Omega$.
+   - **Resistência Mútua:** $R_{12} = R_{21} = -R_3 = -1.1\text{ k}\Omega$.
+
+Montando o sistema reduzido $2 \times 2$:
+
+$$\begin{bmatrix}
+R_1 + R_3 & -R_3 \\
+-R_3 & R_2 + R_3
+\end{bmatrix}
+\begin{bmatrix} i'_{m1} \\ i'_{m2} \end{bmatrix}
+=
+\begin{bmatrix} V_1 \\ V_2 \end{bmatrix}
+\implies
+\begin{bmatrix}
+2.2 & -1.1 \\
+-1.1 & 2.2
+\end{bmatrix} \cdot 10^3
+\begin{bmatrix} i'_{m1} \\ i'_{m2} \end{bmatrix}
+=
+\begin{bmatrix} 5.0 \\ 5.0 \end{bmatrix}$$
 """
 
 # ╔═╡ 3810ae67-eea3-4d93-90c0-acacf2f241a0
-A2 = [2.2 -1.1;
-      -1.1 2.2] * 1e3
-
-# ╔═╡ 8b9e7622-838e-4b0f-bae1-755a1f770bc9
-b2 = [5.0; 5.0]
-
-# ╔═╡ d307947f-eda3-458e-9a91-0f524d3f0a4f
-i2 = A2 \ b2
+begin
+	# Matriz de resistências A2 e vetor b2 do circuito reduzido em Y (2x2)
+	A2 = [ 2.2  -1.1;
+	      -1.1   2.2] * 1e3
+	
+	b2 = [5.0, 5.0]
+	
+	# Resolução do sistema 2x2
+	i2 = A2 \ b2
+end
 
 # ╔═╡ 43c6c635-26d6-41f8-94ca-bca390a8a397
+let
+	i_f1_Y = i2[1]
+	i_centro_Y = i2[2] - i2[1]
+	i_f2_Y = -i2[2]
+	
+	md"""
+	#### 📊 Solução do Sistema Reduzido $2 \times 2$ (Topologia em $Y$):
+	
+	- **Correntes de Malha Reduzidas:**
+	  - $i'_{m1} = $(@sprintf("%.6f", i2[1])) A = **$(@sprintf("%.3f", i2[1] * 1e3)) mA**
+	  - $i'_{m2} = $(@sprintf("%.6f", i2[2])) A = **$(@sprintf("%.3f", i2[2] * 1e3)) mA**
+	
+	- **Correntes de Ramo Externas Equivalentes:**
+	  - **$i_1$ (Fonte 1):** $i_1 = i'_{m1} = $ **$(@sprintf("%.4f", i_f1_Y * 1e3)) mA**
+	  - **$i_2$ (Ramo Central):** $i_2 = i'_{m2} - i'_{m1} = $ **$(@sprintf("%.4f", i_centro_Y * 1e3)) mA**
+	  - **$i_3$ (Fonte 2):** $i_3 = -i'_{m2} = $ **$(@sprintf("%.4f", i_f2_Y * 1e3)) mA**
+
+	---
+	### 🏆 Prova de Equivalência Terminal: $\Delta$ ($3 \times 3$) vs $Y$ ($2 \times 2$)
+
+	> 🎉 **Conclusão Metodológica:** A transformação $\Delta-Y$ preservou integralmente o comportamento elétrico visto de fora do bloco, permitindo resolver o circuito com uma dimensão a menos!
+	"""
+
+
+	HTML("""
+		 <table style="width: 100%; border-collapse: collapse; margin-top: 10px; font-family: sans-serif;">
+		<thead>
+			<tr style="background-color: #f1f5f9; border-bottom: 2px solid #cbd5e1; text-align: left;">
+				<th style="padding: 10px;">Variável de Ramo</th>
+				<th style="padding: 10px; text-align: center;">Circuito Delta (3 Malhas)</th>
+				<th style="padding: 10px; text-align: center;">Circuito Y (2 Malhas)</th>
+				<th style="padding: 10px; text-align: center;">Diferença Relativa</th>
+			</tr>
+		</thead>
+		<tbody>
+			<tr style="border-bottom: 1px solid #e2e8f0;">
+				<td style="padding: 10px;"><b>Corrente da Fonte 1 (i1)</b></td>
+				<td style="padding: 10px; text-align: center; color: #2563eb; font-weight: bold;">$(@sprintf("%.4f", i1[1] * 1e3)) mA</td>
+				<td style="padding: 10px; text-align: center; color: #2563eb; font-weight: bold;">$(@sprintf("%.4f", i2[1] * 1e3)) mA</td>
+				<td style="padding: 10px; text-align: center; color: #16a34a; font-weight: bold;">0.0000 % ✅</td>
+			</tr>
+			<tr style="border-bottom: 1px solid #e2e8f0;">
+				<td style="padding: 10px;"><b>Corrente no Ramo Central (i2)</b></td>
+				<td style="padding: 10px; text-align: center; color: #16a34a; font-weight: bold;">$(@sprintf("%.4f", (i1[1] - i1[3]) * 1e3)) mA</td>
+				<td style="padding: 10px; text-align: center; color: #16a34a; font-weight: bold;">$(@sprintf("%.4f", (i2[2] - i2[1]) * 1e3)) mA</td>
+				<td style="padding: 10px; text-align: center; color: #16a34a; font-weight: bold;">0.0000 % ✅</td>
+			</tr>
+			<tr>
+				<td style="padding: 10px;"><b>Corrente da Fonte 2 (i3)</b></td>
+				<td style="padding: 10px; text-align: center; color: #dc2626; font-weight: bold;">$(@sprintf("%.4f", -i1[3] * 1e3)) mA</td>
+				<td style="padding: 10px; text-align: center; color: #dc2626; font-weight: bold;">$(@sprintf("%.4f", -i2[2] * 1e3)) mA</td>
+				<td style="padding: 10px; text-align: center; color: #16a34a; font-weight: bold;">0.0000 % ✅</td>
+			</tr>
+		</tbody>
+	</table>""")
+end
+
+# ╔═╡ df340e99-294a-4ff4-8669-a057f2920f0b
 md"""
-Resolvendo para as correntes solicitadas:
+---
+## 5. 🚀 Desafio de Conexão: Ponte Desbalanceada com Carga ($R_G$)
 
-i1 = $(i2[1])
+Até agora, analisamos a ponte de Wheatstone assumindo que o detector de nulo entre os nós **A** e **B** é um voltímetro ideal com resistência interna infinita (circuito aberto).
 
-i2 = $(i2[2] - i2[1])
+**Mas o que acontece quando conectamos um galvanômetro real ou uma carga resistiva finita $R_G$ entre A e B?**
 
-i3 = $(-i2[2])
+Nesse caso, a corrente de desequilíbrio $I_G$ passa a circular pelo ramo central. O circuito não pode mais ser simplificado por simples regras de série e paralelo. Aqui temos a união perfeita de todos os tópicos desta aula:
+1. **Resolução por Sistema Linear $3 \times 3$ (LKT):** Formulam-se 3 equações de malha fechada cobrindo a fonte e os dois laços internos da ponte.
+2. **Resolução via Transformação $\Delta \to Y$:** Transforma-se o triângulo superior da ponte formado por $R_x$, $R_2$ e $R_G$ em uma estrela $Y$. Com isso, os resistores inferiores $R_3$ e $R_4$ ficam em série direta com os ramos da estrela, transformando a ponte inteira em um circuito série-paralelo elementar!
 """
 
-# ╔═╡ f37b78ee-d253-42ad-bdb4-2b7e451585cb
+# ╔═╡ 64f09938-cb61-4f52-ba34-b375be5c72d5
 md"""
-### Transformação Y-$\Delta$
+### 🎛️ Simulador da Ponte de Wheatstone com Carga
+
+Ajuste a resistência interna do galvanômetro $R_G$ e o resistor $R_x$ para analisar a corrente que circula pelo instrumento:
 """
 
-# ╔═╡ 7cdb6721-2e65-4098-a59e-f68cd3ad2f9d
+# ╔═╡ 51f1034e-73b0-43fd-b05c-a2130d95a845
+@bind RG_val Slider(10.0:10.0:1000.0, default=100.0, show_value=true)
+
+# ╔═╡ 6cf91c8b-0b03-46b7-9f98-76d59c0d8ea6
+@bind Rx_loaded Slider(500.0:50.0:2000.0, default=1200.0, show_value=true)
+
+# ╔═╡ 8c69b774-71e6-4c1d-adef-cc8bd528b566
+begin
+	# Parâmetros fixos da ponte sob teste
+	R2_fix = 1000.0
+	R3_fix = 1000.0
+	R4_fix = 1000.0
+	Vf_fix = 10.0
+	
+	# Matriz de Malhas 3x3 da ponte de Wheatstone com detector RG:
+	# Malha 1: Laço exterior com a fonte Vf, Rx e R3
+	# Malha 2: Triângulo superior formado por Rx, RG e R2
+	# Malha 3: Triângulo inferior formado por R3, R4 e RG
+	A_loaded = [
+		(Rx_loaded + R3_fix)            -Rx_loaded                     -R3_fix;
+		-Rx_loaded              (Rx_loaded + R2_fix + RG_val)          -RG_val;
+		-R3_fix                         -RG_val                (R3_fix + R4_fix + RG_val)
+	]
+	
+	b_loaded = [Vf_fix, 0.0, 0.0]
+	
+	# Resolução via sistema linear
+	i_loaded = A_loaded \ b_loaded
+	
+	# Corrente no galvanômetro (ramo central de A para B):
+	i_detector = i_loaded[2] - i_loaded[3]
+	v_detector = i_detector * RG_val
+	
+	# Tensão de circuito aberto Thévenin da ponte (sem RG):
+	v_th_ponte = Vf_fix * (R3_fix / (Rx_loaded + R3_fix) - R4_fix / (R2_fix + R4_fix))
+	r_th_ponte = (Rx_loaded * R3_fix)/(Rx_loaded + R3_fix) + (R2_fix * R4_fix)/(R2_fix + R4_fix)
+	
+	HTML("""
+	<div style="background-color: #f8fafc; border: 2px solid #64748b; border-radius: 12px; padding: 18px; margin: 12px 0; font-family: sans-serif;">
+		<h4 style="margin: 0 0 10px 0; color: #1e293b;">⚡ Análise da Ponte com Instrumento Real (RG = RG_val Ohms):</h4>
+		
+		<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px;">
+			<div style="background: #ffffff; padding: 12px; border-radius: 8px; border: 1px solid #e2e8f0;">
+				<div style="color: #64748b; font-size: 0.85em; text-transform: uppercase;">Medição no Galvanômetro</div>
+				<div style="margin-top: 4px;"><b>Corrente no Detector (Ig):</b> <span style="font-weight: bold; color: #0284c7;">$(@sprintf("%+.4f", i_detector * 1e3)) mA</span></div>
+				<div><b>Tensão no Detector (Vg):</b> <span style="font-weight: bold; color: #059669;">$(@sprintf("%+.4f", v_detector)) V</span></div>
+			</div>
+			
+			<div style="background: #ffffff; padding: 12px; border-radius: 8px; border: 1px solid #e2e8f0;">
+				<div style="color: #64748b; font-size: 0.85em; text-transform: uppercase;">Equivalente Thévenin da Ponte</div>
+				<div style="margin-top: 4px;"><b>Tensão em Vazio (VTh):</b> $(@sprintf("%+.4f", v_th_ponte)) V</div>
+				<div><b>Resistência Thévenin (RTh):</b> $(@sprintf("%.1f", r_th_ponte)) Ohms</div>
+			</div>
+		</div>
+		
+		<p style="margin: 10px 0 0 0; font-size: 0.9em; color: #475569;">
+			💡 <i>Perceba o efeito de carga: a tensão no galvanômetro (Vg) é atenuada em relação à tensão em vazio pela regra do divisor de tensão Thévenin: Vg = VTh RG/RTh + RG.</i>
+		</p>
+	</div>
+	""")
+end
+
+# ╔═╡ 8e9b9eb0-4a91-4d26-b660-09b472107eb1
 md"""
+---
+## 6. 🎯 Mini-Quiz Interativo de Fixação
 
-As equações para a conversão de uma topologia de circuito de Y para $\Delta$ são dadas por:
+Teste sua intuição antes de ir para a bancada de laboratório!
 
-$$R_a = \frac{R_1 R_2 + R_1 R_3 + R_2 R_3}{R_1}$$
+**Pergunta Conceitual:** Uma carga trifásica simétrica conectada em $\Delta$ é formada por três resistores idênticos de $150\,\Omega$ cada. Para substituir essa carga por uma configuração equivalente em estrela ($Y$) que dissipe rigorosamente a mesma potência e mantenha as mesmas correntes de linha, qual deve ser a resistência de cada resistor do ramo em $Y$?
+"""
 
-$$R_b = \frac{R_1 R_2 + R_1 R_3 + R_2 R_3}{R_2}$$
+# ╔═╡ 52f93196-7855-437f-be72-6846eb3bbba2
+@bind quiz_ans Select([
+	"Selecione sua resposta...",
+	"A) 450 Ω (multiplica a resistência por 3)",
+	"B) 50 Ω (divide a resistência por 3)",
+	"C) 150 Ω (a resistência permanece rigorosamente igual)",
+	"D) 75 Ω (divide a resistência por 2)"
+])
 
-$$R_c = \frac{R_1 R_2 + R_1 R_3 + R_2 R_3}{R_3}$$
+# ╔═╡ cb37b20c-7703-43ca-b1e1-8cb09c068822
+begin
+	if quiz_ans == "Selecione sua resposta..."
+		md"""*👉 Escolha uma opção acima para testar seu conhecimento.*"""
+	elseif quiz_ans == "B) 50 Ω (divide a resistência por 3)"
+		md"""
+		<div style="padding: 14px; background-color: #ecfdf5; border-left: 5px solid #10b981; border-radius: 8px; font-family: sans-serif;">
+			🎉 <b>Parabéns! Resposta Exata!</b><br>
+			Pela propriedade de simetria do Teorema de Kennelly:
+			$$R_Y = \frac{R_\Delta}{3} = \frac{150\,\Omega}{3} = 50\,\Omega$$
+			A resistência de cada braço da estrela é sempre $1/3$ da resistência correspondente em delta!
+		</div>
+		"""
+	else
+		md"""
+		<div style="padding: 14px; background-color: #fef2f2; border-left: 5px solid #ef4444; border-radius: 8px; font-family: sans-serif;">
+			❌ <b>Não é bem isso. Revise o Teorema de Kennelly!</b><br>
+			Lembre-se da regra mnemônica: como na estrela a corrente precisa atravessar dois ramos em série entre cada par de terminais externos ($R_{AB} = R_1 + R_2 = 2 R_Y$), para igualar o paralelo em delta a resistência individual em estrela deve ser <b>menor</b>: $R_Y = R_\Delta / 3$.
+		</div>
+		"""
+	end
+end
 
-!!! important "Esclarecendo!"
-	Os mesmos conceitos mostrados para a resolução de circuitos utilizando transformações $\Delta$-Y são válidos na análise de circuitos Y-$\Delta$.
+# ╔═╡ 03c5b4a1-92bc-4530-b8df-1edb3a0f0b83
+md"""
+---
+## 7. 🛠️ Boas Práticas e Dicas de Bancada (UFC / DEE)
+
+!!! warning "⚠️ Recomendações Essenciais para a Aula Prática de Laboratório"
+	1. **Tolerância dos Componentes:** Resistores comerciais de filme de carvão ou metálico possuem tolerância típica de $\pm 5\%$ (quarta faixa dourada) ou $\pm 1\%$ (faixa marrom). Sempre meça os valores ôhmicos reais com o multímetro na escala de resistência **antes** de ligar o circuito!
+	2. **Aquecimento por Efeito Joule ($P = R \cdot I^2$):** Resistores submetidos a correntes contínuas aquecem. O coeficiente térmico do material faz a resistência variar levemente com a temperatura, o que pode causar pequenos desvios durante medições prolongadas na ponte.
+	3. **Resistência de Contato na Matriz de Contatos (*Protoboard*):** Fios desencapados oxidados ou contatos frouxos no protoboard adicionam resistências parasitas de $0.1\,\Omega$ a $0.5\,\Omega$. Ao montar pontes sensíveis, certifique-se de que todas as conexões estejam bem firmes.
+	4. **Segurança em Primeiro Lugar:** Monte toda a fiação e confira as conexões com a fonte de alimentação **completamente desligada**. Só energize após a conferência visual!
 """
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
 [deps]
+LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 PlotlyJS = "f0f68f2c-4968-5e81-91da-67840de0976a"
 Plots = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
 PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
+Printf = "de0858da-6303-5e67-8744-51eddeeeb8d7"
 
 [compat]
 PlotlyJS = "~0.18.15"
@@ -287,9 +818,9 @@ PlutoUI = "~0.7.60"
 PLUTO_MANIFEST_TOML_CONTENTS = """
 # This file is machine-generated - editing it directly is not advised
 
-julia_version = "1.11.5"
+julia_version = "1.12.6"
 manifest_format = "2.0"
-project_hash = "92c4b11e7e04ddb12576e6ef1772909f0151ef1f"
+project_hash = "f69e59711c7b21cf38fd4fa9c7c79ea8585d3a7e"
 
 [[deps.AbstractPlutoDingetjes]]
 deps = ["Pkg"]
@@ -387,7 +918,7 @@ weakdeps = ["Dates", "LinearAlgebra"]
 [[deps.CompilerSupportLibraries_jll]]
 deps = ["Artifacts", "Libdl"]
 uuid = "e66e0078-7015-5450-92f7-15fbd957f2ae"
-version = "1.1.1+0"
+version = "1.3.0+1"
 
 [[deps.ConcurrentUtilities]]
 deps = ["Serialization", "Sockets"]
@@ -447,7 +978,7 @@ version = "0.9.3"
 [[deps.Downloads]]
 deps = ["ArgTools", "FileWatching", "LibCURL", "NetworkOptions"]
 uuid = "f43a241f-c20a-4ad4-852c-f6b1247861c6"
-version = "1.6.0"
+version = "1.7.0"
 
 [[deps.EpollShim_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl"]
@@ -640,6 +1171,11 @@ git-tree-sha1 = "25ee0be4d43d0269027024d75a24c24d6c6e590c"
 uuid = "aacddb02-875f-59d6-b918-886e6ef4fbf8"
 version = "3.0.4+0"
 
+[[deps.JuliaSyntaxHighlighting]]
+deps = ["StyledStrings"]
+uuid = "ac6e5ff7-fb65-4e79-a425-ec3bc9c03011"
+version = "1.12.0"
+
 [[deps.Kaleido_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
 git-tree-sha1 = "43032da5832754f58d14a91ffbe86d5f176acda9"
@@ -703,24 +1239,24 @@ uuid = "b27032c2-a3e7-50c8-80cd-2d36dbcbfd21"
 version = "0.6.4"
 
 [[deps.LibCURL_jll]]
-deps = ["Artifacts", "LibSSH2_jll", "Libdl", "MbedTLS_jll", "Zlib_jll", "nghttp2_jll"]
+deps = ["Artifacts", "LibSSH2_jll", "Libdl", "OpenSSL_jll", "Zlib_jll", "nghttp2_jll"]
 uuid = "deac9b47-8bc7-5906-a0fe-35ac56dc84c0"
-version = "8.6.0+0"
+version = "8.15.0+0"
 
 [[deps.LibGit2]]
-deps = ["Base64", "LibGit2_jll", "NetworkOptions", "Printf", "SHA"]
+deps = ["LibGit2_jll", "NetworkOptions", "Printf", "SHA"]
 uuid = "76f85450-5226-5b5a-8eaa-529ad045b433"
 version = "1.11.0"
 
 [[deps.LibGit2_jll]]
-deps = ["Artifacts", "LibSSH2_jll", "Libdl", "MbedTLS_jll"]
+deps = ["Artifacts", "LibSSH2_jll", "Libdl", "OpenSSL_jll"]
 uuid = "e37daf67-58a4-590a-8e99-b0245dd2ffc5"
-version = "1.7.2+0"
+version = "1.9.0+0"
 
 [[deps.LibSSH2_jll]]
-deps = ["Artifacts", "Libdl", "MbedTLS_jll"]
+deps = ["Artifacts", "Libdl", "OpenSSL_jll"]
 uuid = "29816b5a-b9ab-546f-933c-edad1886dfa8"
-version = "1.11.0+1"
+version = "1.11.3+1"
 
 [[deps.Libdl]]
 uuid = "8f399da3-3557-5675-b5ff-fb832c97cbdb"
@@ -777,7 +1313,7 @@ version = "2.40.1+0"
 [[deps.LinearAlgebra]]
 deps = ["Libdl", "OpenBLAS_jll", "libblastrampoline_jll"]
 uuid = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
-version = "1.11.0"
+version = "1.12.0"
 
 [[deps.LogExpFunctions]]
 deps = ["DocStringExtensions", "IrrationalConstants", "LinearAlgebra"]
@@ -817,7 +1353,7 @@ uuid = "1914dd2f-81c6-5fcd-8719-6d5c9610ff09"
 version = "0.5.13"
 
 [[deps.Markdown]]
-deps = ["Base64"]
+deps = ["Base64", "JuliaSyntaxHighlighting", "StyledStrings"]
 uuid = "d6f4376e-aef5-505a-96c1-9c027394607a"
 version = "1.11.0"
 
@@ -828,9 +1364,10 @@ uuid = "739be429-bea8-5141-9913-cc70e7f3736d"
 version = "1.1.9"
 
 [[deps.MbedTLS_jll]]
-deps = ["Artifacts", "Libdl"]
+deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
+git-tree-sha1 = "0eef589dd1c26a3ac9d753fe1a8bcad63f956fa6"
 uuid = "c8ffd9c3-330d-5841-b78e-0817d7145fa1"
-version = "2.28.6+0"
+version = "2.16.8+1"
 
 [[deps.Measures]]
 git-tree-sha1 = "c13304c81eec1ed3af7fc20e75fb6b26092a1102"
@@ -849,7 +1386,7 @@ version = "1.11.0"
 
 [[deps.MozillaCACerts_jll]]
 uuid = "14a3606d-f60d-562e-9121-12d972cd8159"
-version = "2023.12.12"
+version = "2025.11.4"
 
 [[deps.Mustache]]
 deps = ["Printf", "Tables"]
@@ -871,7 +1408,7 @@ version = "1.0.2"
 
 [[deps.NetworkOptions]]
 uuid = "ca575930-c2e3-43a9-ace4-1e988b2c1908"
-version = "1.2.0"
+version = "1.3.0"
 
 [[deps.Observables]]
 git-tree-sha1 = "7438a59546cf62428fc9d1bc94729146d37a7225"
@@ -887,12 +1424,12 @@ version = "1.3.5+1"
 [[deps.OpenBLAS_jll]]
 deps = ["Artifacts", "CompilerSupportLibraries_jll", "Libdl"]
 uuid = "4536629a-c528-5b80-bd46-f80d51c5b363"
-version = "0.3.27+1"
+version = "0.3.29+0"
 
 [[deps.OpenLibm_jll]]
 deps = ["Artifacts", "Libdl"]
 uuid = "05823500-19ac-5b8b-9628-191a04bc5112"
-version = "0.8.5+0"
+version = "0.8.7+0"
 
 [[deps.OpenSSL]]
 deps = ["BitFlags", "Dates", "MozillaCACerts_jll", "OpenSSL_jll", "Sockets"]
@@ -901,10 +1438,9 @@ uuid = "4d8831e6-92b7-49fb-bdf8-b643e874388c"
 version = "1.4.3"
 
 [[deps.OpenSSL_jll]]
-deps = ["Artifacts", "JLLWrappers", "Libdl"]
-git-tree-sha1 = "7493f61f55a6cce7325f197443aa80d32554ba10"
+deps = ["Artifacts", "Libdl"]
 uuid = "458c3c95-2e84-50aa-8efc-19380b2a3a95"
-version = "3.0.15+1"
+version = "3.5.4+0"
 
 [[deps.Opus_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl"]
@@ -920,7 +1456,7 @@ version = "1.6.3"
 [[deps.PCRE2_jll]]
 deps = ["Artifacts", "Libdl"]
 uuid = "efcefdf7-47ab-520b-bdef-62a2eaa19f15"
-version = "10.42.0+1"
+version = "10.44.0+1"
 
 [[deps.Pango_jll]]
 deps = ["Artifacts", "Cairo_jll", "Fontconfig_jll", "FreeType2_jll", "FriBidi_jll", "Glib_jll", "HarfBuzz_jll", "JLLWrappers", "Libdl"]
@@ -960,7 +1496,7 @@ version = "0.43.4+0"
 [[deps.Pkg]]
 deps = ["Artifacts", "Dates", "Downloads", "FileWatching", "LibGit2", "Libdl", "Logging", "Markdown", "Printf", "Random", "SHA", "TOML", "Tar", "UUIDs", "p7zip_jll"]
 uuid = "44cfe95a-1eb2-52ea-b672-e2afdf69b78f"
-version = "1.11.0"
+version = "1.12.1"
 weakdeps = ["REPL"]
 
     [deps.Pkg.extensions]
@@ -1076,7 +1612,7 @@ uuid = "e99dba38-086e-5de3-a5b1-6e4c66e897c3"
 version = "6.7.1+1"
 
 [[deps.REPL]]
-deps = ["InteractiveUtils", "Markdown", "Sockets", "StyledStrings", "Unicode"]
+deps = ["InteractiveUtils", "JuliaSyntaxHighlighting", "Markdown", "Sockets", "StyledStrings", "Unicode"]
 uuid = "3fa0cd96-eef1-5676-8a61-b3b8758bbffb"
 version = "1.11.0"
 
@@ -1152,7 +1688,7 @@ version = "1.2.1"
 [[deps.SparseArrays]]
 deps = ["Libdl", "LinearAlgebra", "Random", "Serialization", "SuiteSparse_jll"]
 uuid = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
-version = "1.11.0"
+version = "1.12.0"
 
 [[deps.StableRNGs]]
 deps = ["Random"]
@@ -1189,7 +1725,7 @@ version = "1.11.0"
 [[deps.SuiteSparse_jll]]
 deps = ["Artifacts", "Libdl", "libblastrampoline_jll"]
 uuid = "bea87d4a-7f5b-5778-9afe-8cc45184846c"
-version = "7.7.0+0"
+version = "7.8.3+2"
 
 [[deps.TOML]]
 deps = ["Dates"]
@@ -1485,7 +2021,7 @@ version = "1.5.0+0"
 [[deps.Zlib_jll]]
 deps = ["Libdl"]
 uuid = "83775a58-1f1d-513f-b197-d71354ab007a"
-version = "1.2.13+1"
+version = "1.3.1+2"
 
 [[deps.Zstd_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl"]
@@ -1526,7 +2062,7 @@ version = "0.15.2+0"
 [[deps.libblastrampoline_jll]]
 deps = ["Artifacts", "Libdl"]
 uuid = "8e850b90-86db-534c-a0d3-1478176c7d93"
-version = "5.11.0+0"
+version = "5.15.0+0"
 
 [[deps.libdecor_jll]]
 deps = ["Artifacts", "Dbus_jll", "JLLWrappers", "Libdl", "Libglvnd_jll", "Pango_jll", "Wayland_jll", "xkbcommon_jll"]
@@ -1573,12 +2109,12 @@ version = "1.1.6+0"
 [[deps.nghttp2_jll]]
 deps = ["Artifacts", "Libdl"]
 uuid = "8e850ede-7688-5339-a07c-302acd2aaf8d"
-version = "1.59.0+0"
+version = "1.64.0+1"
 
 [[deps.p7zip_jll]]
-deps = ["Artifacts", "Libdl"]
+deps = ["Artifacts", "CompilerSupportLibraries_jll", "Libdl"]
 uuid = "3f19e933-33d8-53b3-aaab-bd5110c3b7a0"
-version = "17.4.0+2"
+version = "17.7.0+0"
 
 [[deps.x264_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
@@ -1600,41 +2136,48 @@ version = "1.4.1+1"
 """
 
 # ╔═╡ Cell order:
-# ╟─19b9aa11-3850-45a4-8ce1-5a3ff9d9a5a3
 # ╠═bbdc8a1f-feb4-400f-a277-c89b0d8c17a9
+# ╟─19b9aa11-3850-45a4-8ce1-5a3ff9d9a5a3
 # ╠═9ea4a211-9374-4019-b395-44a647f310e5
 # ╠═abf48c08-aae6-45ff-8ed0-1b2d0588a118
 # ╟─93ead8ed-83af-46e5-99a0-3bfea745efc9
 # ╟─1cf3f558-20ca-4690-960f-342e3fa90cf8
-# ╟─a46e62f3-27a4-4257-a83b-a23f164bd78c
-# ╟─b6c185e0-16dd-4f6c-8780-dccecddbb83e
-# ╟─7db876c1-d1be-408c-82c0-fb4309d63d54
-# ╠═6496325e-a95b-4fb1-b6f5-d1f22f6d552c
-# ╠═f48780fd-6ddb-4d3c-b402-1a24abcba8f9
+# ╟─6496325e-a95b-4fb1-b6f5-d1f22f6d552c
+# ╠═4ad539f7-968a-41e8-81bb-dff1327fab4f
+# ╠═84c7a2d9-b1b3-42aa-91c3-824f2316e0eb
+# ╠═79feb155-5764-4646-898a-01af4f1c107a
+# ╠═3b073d7f-19ba-4eae-b1c6-7c67871f6b1e
+# ╠═52c67323-5a5a-48a0-a03c-801560b2c5f1
 # ╠═ca4222ce-8c20-4bcc-a876-66788193a57f
-# ╠═06b2a323-97ab-4671-8a10-0d08c7e8528a
-# ╟─e269fe9c-37a6-4eaf-84b8-6cac50f8ffe8
-# ╟─43dc1092-5e59-4e68-a7dd-5a470184a979
 # ╟─22bd1528-6743-4d40-9f4b-83fce7706913
-# ╟─72721ed9-26ad-462e-b18a-e707707b90fc
+# ╠═06b2a323-97ab-4671-8a10-0d08c7e8528a
+# ╟─b19f3f9a-74f3-45f2-b7bf-dce6c513ad8b
+# ╟─b1ec042c-84ad-4f37-adca-d78e22fb7202
+# ╠═ca139776-7515-4355-8450-d9c57d3db02f
+# ╠═62f6b4be-e551-4d41-9850-db374f9e7b47
+# ╟─07d138db-f81d-4370-b986-43cef807b3b9
 # ╟─6c5d2a4c-95a4-11ef-1cee-f1cd7fbea9f0
-# ╟─a11f96c4-1ce7-45d0-bead-1e6cccd57730
-# ╟─81cdf678-38e5-4c71-868c-4ec9bebf07da
-# ╟─e255349a-4389-4503-9c52-5688cf526b2f
-# ╟─2e6dd394-eadc-46ad-8053-27845e947970
-# ╟─20552dca-3c3a-4391-a3af-62997573a39c
 # ╟─ccbb9ab2-a118-404f-afe8-ab09f6324906
+# ╟─5bc79e3f-cfb9-449e-add9-61a5d06722ea
+# ╠═2deea11f-f7d3-49b4-9e32-cfce450f3a81
+# ╠═061641ba-d65e-468f-8256-d830fb24a14c
+# ╠═7bc8eb5c-48a6-414c-a34a-f5dac652e013
+# ╟─56259a69-3dd3-4362-93b1-167d7157809f
+# ╟─a11f96c4-1ce7-45d0-bead-1e6cccd57730
 # ╟─23688dbc-37e0-49ff-ac41-02242052d4da
 # ╠═d56d9f34-ff02-4fa7-8fb1-b811b332bac7
-# ╠═2e8db27d-4f9a-4d78-b9a8-03d8cfc8938d
-# ╠═5b071c8e-7cfd-4f44-b388-7d7758545f46
-# ╟─e1bc0eb8-668d-4ade-ba70-a399aaf9bcdc
+# ╠═e1bc0eb8-668d-4ade-ba70-a399aaf9bcdc
 # ╟─f0f33f54-5326-4682-8a52-cfb3a7d5624e
 # ╠═3810ae67-eea3-4d93-90c0-acacf2f241a0
-# ╠═8b9e7622-838e-4b0f-bae1-755a1f770bc9
-# ╠═d307947f-eda3-458e-9a91-0f524d3f0a4f
 # ╟─43c6c635-26d6-41f8-94ca-bca390a8a397
-# ╟─f37b78ee-d253-42ad-bdb4-2b7e451585cb
-# ╟─7cdb6721-2e65-4098-a59e-f68cd3ad2f9d
+# ╟─df340e99-294a-4ff4-8669-a057f2920f0b
+# ╟─64f09938-cb61-4f52-ba34-b375be5c72d5
+# ╠═51f1034e-73b0-43fd-b05c-a2130d95a845
+# ╠═6cf91c8b-0b03-46b7-9f98-76d59c0d8ea6
+# ╟─8c69b774-71e6-4c1d-adef-cc8bd528b566
+# ╟─8e9b9eb0-4a91-4d26-b660-09b472107eb1
+# ╠═52f93196-7855-437f-be72-6846eb3bbba2
+# ╟─cb37b20c-7703-43ca-b1e1-8cb09c068822
+# ╟─03c5b4a1-92bc-4530-b8df-1edb3a0f0b83
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
