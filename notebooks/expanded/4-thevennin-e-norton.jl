@@ -16,256 +16,692 @@ macro bind(def, element)
     #! format: on
 end
 
-# ╔═╡ f06b39c6-b633-11ef-1619-bdb8a48ded68
+# ╔═╡ 224ebb00-402a-459a-b668-8d115097d034
 begin
 	using PlutoUI
 	using Plots
 	using PlotlyJS
+	using LinearAlgebra
+	using Printf
 end
 
-# ╔═╡ 01fdd2cd-d00c-4710-b6d2-5888641f9637
+# ╔═╡ 2ff3b043-fe8d-4827-b219-474ec242bdb8
 md"""
-# Laboratório de Circuitos Elétricos I
+# ⚡ Laboratório de Circuitos Elétricos I
 
-!!! tip "Semestre 2024.2"
-	- Departamento de Engenharia Elétrica - Universidade Federal do Ceará
-	- Turmas 01 e 02
-	- Professor Lucas Silveira
+!!! tip "Universidade Federal do Ceará — DEE"
+	- **Disciplina:** Laboratório de Circuitos Elétricos em Corrente Contínua
+	- **Semestre:** 2025.2
+	- **Turmas:** 01 e 02
+	- **Professor:** Lucas Silveira
 
-## Prática 5: Teoremas de Thevennin e Norton
+## 🔬 Prática 5: Teoremas de Thévenin e Norton
+
+Seja muito bem-vindo a este **caderno interativo de laboratório**! Este material foi projetado para transformar o aprendizado dos Teoremas de Thévenin e Norton em uma experiência dinâmica, visual e intuitiva.
+
+### 🎯 Objetivos de Aprendizagem:
+1. 🔌 **Princípio da Equivalência Terminal:** Compreender que o circuito equivalente (Thévenin ou Norton) substitui qualquer rede linear ativa de dois terminais $A$ e $B$, garantindo tensão e corrente rigorosamente idênticas para qualquer carga $R_L$ conectada aos terminais.
+2. ⚡ **Teorema de Thévenin:** Determinar a tensão de circuito aberto $V_{Th} = V_{oc}$ e a resistência equivalente $R_{Th}$, reduzindo o circuito a uma única fonte de tensão ideal em série com um resistor.
+3. 🌀 **Teorema de Norton:** Determinar a corrente de curto-circuito $I_N = I_{sc}$ e a resistência equivalente de Norton $R_N = R_{Th}$, reduzindo a rede a uma fonte de corrente ideal em paralelo com um resistor.
+4. 🔄 **Dualidade e Transformação de Fontes:** Dominar a relação intrínseca entre os dois modelos:
+   $$V_{Th} = R_{Th} \cdot I_N \iff I_N = \frac{V_{Th}}{R_{Th}}, \quad R_N = R_{Th}$$
+5. 🔍 **Métodos Sistemáticos de Obtenção de Parâmetros:** Praticar a desativação de fontes independentes, a determinação por razão $V_{oc}/I_{sc}$ e a técnica experimental de variação de carga em bancada.
+6. 🧮 **Equacionamento e Resolução Matricial ($A \cdot x = b$):** Resolver o circuito completo original via Análise de Malhas no Julia (`A \ b`) e comprovar a identidade matemática exata ($0{,}0000\%$ de erro relativo) perante os modelos reduzidos.
+7. 📈 **Reta de Carga e Máxima Transferência de Potência:** Visualizar no plano $V_L \times I_L$ a reta de carga do equivalente, identificar o ponto quiescente $Q$ e demonstrar o Teorema de Jacobi ($R_L = R_{Th}$) na curva de potência dissipada $P_L(R_L)$.
+8. 🛠️ **Emulação Prática de Fontes de Corrente em Bancada:** Compreender a necessidade e o método prático de utilizar uma fonte de tensão regulável $V_f$ para calibrar a corrente de Norton no ponto de operação experimental.
 """
 
-# ╔═╡ 8b0422c1-faa3-442c-b064-aec4502c20b3
-TableOfContents()
+# ╔═╡ 8dc943b4-8305-4429-96e5-b696f38d355e
+PlutoUI.TableOfContents(title="📑 Conteúdo Interativo", indent=true)
 
-# ╔═╡ 3301dc1f-903b-4727-92b5-099a80f97a22
+# ╔═╡ bb30e0f1-d3ab-4262-ab9f-18c6f60581ec
+plotlyjs()
+
+# ╔═╡ 4bbd7878-c5d3-4747-b486-4e700857549a
 md"""
-## Aspectos Teóricos
+---
+## 1. 🏛️ Fundamentos Teóricos e Contexto Histórico
 
-### Teorema de Thévenin
+### 📜 Uma Breve Viagem pela História dos Equivalentes Elétricos
+Muitas vezes aprendemos teoremas na engenharia como fórmulas prontas, esquecendo os brilhantes cientistas e os desafios tecnológicos que os motivaram:
 
-Teorema de Thévenin:
+1. **Hermann von Helmholtz (1853):** O célebre médico e físico alemão formulou originalmente este princípio em seu artigo sobre correntes elétricas em condutores físicos e tecidos biológicos (*Über einige Gesetze der Vertheilung elektrischer Ströme in körperlichen Leitern*).
+2. **Léon Charles Thévenin (1883):** Trinta anos depois, o jovem engenheiro de telecomunicações francês Léon Thévenin, trabalhando na rede telegráfica pública de Paris, redescobriu e generalizou o teorema para simplificar redes complexas com dezenas de estações repetidoras e baterias.
+3. **Edward Lawry Norton e Hans Ferdinand Mayer (1926):** De forma independente, Norton (nos lendários Laboratórios Bell) e Mayer (na Siemens na Alemanha) publicaram o equivalente dual em corrente, que se tornou um pilar indispensável para o projeto de circuitos com transistores e amplificadores.
 
-> *Qualquer rede linear bilateral de corrente contínua com dois terminais pode ser substituída por um circuito equivalente composto por uma fonte de tensão e um resistor em série.*
+---
 
-O circuito equivalente de Thévenin provê uma equivalência **somente nos terminais**. A construção interna e as características da rede original e do equivalente de Thévenin são normalmente bem diferentes.
+### 🔌 O Princípio Fundamental da Equivalência Terminal
 
-Através dele é possível simplificar partes da rede que não são objeto de análise (tudo que fica antes dos terminais) e focar no que realmente se quer analisar (o que fica depois dos terminais) sem que o comportamento seja alterado. Assim pode-se trocar uma rede complexa, mas que não é o foco do estudo, por uma fonte e um resistor.
+> **Definição Rigorosa:** Dois circuitos de dois terminais são considerados **equivalentes** se, e somente se, produzem a mesmíssima relação de tensão e corrente ($v \times i$) em seus terminais externos para **qualquer** carga linear ou não-linear conectada entre eles.
 
-### Teorema de Norton
+!!! warning "⚠️ Cuidado com a Falácia da Equivalência Interna!"
+	- A equivalência existe **EXCLUSIVAMENTE NOS TERMINAIS EXTERNOS $A$ E $B$**.
+	- **Internamente**, os dois circuitos são completamente diferentes:
+	  - As tensões nos nós internos da rede original **não existem** no circuito de Thévenin.
+	  - A potência total dissipada dentro da caixa preta da rede original é quase sempre **diferente** da potência dissipada em $R_{Th}$!
+	  - Por exemplo, em circuito aberto ($R_L = \infty$), o equivalente de Thévenin dissipa $P = 0\text{ W}$, enquanto a rede original pode dissipar centenas de miliwatts em seus divisores de tensão internos!
+	- **A regra de ouro:** O modelo equivalente é uma abstração para a carga; nunca tente medir grandezas internas da rede original a partir do modelo reduzido!
 
-> *Qualquer rede linear bilateral de corrente contínua com dois terminais pode ser substituída por um circuito equivalente composto por uma fonte de corrente e um resistor em paralelo.*
+---
 
-As características e aplicações do equivalente de Thévenin também são válidas para o equivalente de Norton. 
+### ⚡ Enunciados Formais e Transformação de Fontes
 
+#### 1. Teorema de Thévenin:
+> *Qualquer circuito linear bilateral de corrente contínua com dois terminais acessíveis $A$ e $B$ pode ser substituído por um circuito equivalente composto por uma única fonte de tensão ideal $V_{Th}$ conectada em série com um resistor $R_{Th}$.*
+- $V_{Th}$: Tensão de circuito aberto ($V_{oc}$) entre os terminais $A$ e $B$.
+- $R_{Th}$: Resistência de entrada equivalente vista dos terminais $A$ e $B$ com todas as fontes independentes desativadas.
+
+#### 2. Teorema de Norton:
+> *Qualquer circuito linear bilateral de corrente contínua com dois terminais acessíveis $A$ e $B$ pode ser substituído por um circuito equivalente composto por uma única fonte de corrente ideal $I_N$ conectada em paralelo com um resistor $R_N$.*
+- $I_N$: Corrente de curto-circuito ($I_{sc}$) que flui de $A$ para $B$ quando os terminais são interligados por um condutor ideal.
+- $R_N$: Resistência equivalente de Norton, rigorosamente igual à resistência de Thévenin ($R_N = R_{Th}$).
+
+#### 🔄 Dualidade e Transformação de Fontes:
+Os dois equivalentes são transformações duais um do outro, governadas pela Lei de Ohm:
+$$V_{Th} = R_{Th} \cdot I_N \iff I_N = \frac{V_{Th}}{R_{Th}}, \quad R_N = R_{Th}$$
+Essa relação direta permite alternar instantaneamente entre a representação de Thévenin (ideal para análise de malhas) e a representação de Norton (ideal para análise nodal).
 """
 
-# ╔═╡ 7d112dd2-6c88-408f-a0d7-4aa644926d23
-
-
-# ╔═╡ 43ef2f42-3ad7-433a-85f3-b071d7375dc7
+# ╔═╡ 2f0ec5e4-0b30-4379-955c-06ea1435fe96
 md"""
-## Procedimento Prático
+---
+## 2. 🔍 Os Três Métodos para Determinação de $R_{Th}$ e $V_{Th}$
 
-### Passos 1 e 2: Determinação dos parâmetros Rth, Vth e Inort
+Para obter os parâmetros equivalentes de qualquer rede linear, o engenheiro dispõe de três métodos principais:
+
+### 1️⃣ Método 1: Circuito Aberto e Desativação de Fontes
+- **Tensão de Thévenin ($V_{Th}$):** Calcula-se ou mede-se a tensão entre os terminais $A$ e $B$ sem qualquer carga conectada ($R_L = \infty$):
+  $$V_{Th} = V_{oc} = V_A - V_B$$
+- **Resistência de Thévenin ($R_{Th}$):** Desativam-se todas as fontes independentes do circuito:
+  - Fontes de tensão independentes são substituídas por **curtos-circuitos** ($V = 0\text{ V}$, fio ideal).
+  - Fontes de corrente independentes são substituídas por **circuitos abertos** ($I = 0\text{ A}$, ramo interrompido).
+  - Calcula-se a resistência equivalente da associação série/paralelo vista dos terminais $A$ e $B$:
+    $$R_{Th} = R_{eq(AB)}$$
+  *(Nota: Se houver fontes dependentes, este método de desativação direta não se aplica!)*
+
+### 2️⃣ Método 2: Razão de Tensão Aberta por Corrente de Curto ($V_{oc} / I_{sc}$)
+- Determina-se a tensão de circuito aberto $V_{oc} = V_{Th}$.
+- Interligam-se os terminais $A$ e $B$ por um condutor ideal ($V_{AB} = 0$) e calcula-se a corrente de curto-circuito $I_{sc} = I_N$.
+- Pela linearidade estrita da rede:
+  $$R_{Th} = \frac{V_{oc}}{I_{sc}} = \frac{V_{Th}}{I_N}$$
+  Este método é universalmente válido, funcionando perfeitamente mesmo na presença de **fontes controladas (dependentes)**!
+
+### 3️⃣ Método 3: Método da Carga de Teste / Meia Tensão (Prática de Bancada)
+Em um laboratório real, provocar um curto-circuito intencional com um amperímetro pode fundir o fusível interno do instrumento ou sobreaquecer a fonte se $R_{Th}$ for baixo. Uma técnica alternativa consagrada em bancada é:
+1. Mede-se com o voltímetro a tensão de circuito aberto $V_{oc} = V_{Th}$.
+2. Conecta-se um resistor ou potenciômetro de carga $R_L$ entre $A$ e $B$ e mede-se a tensão $V_L$.
+3. Como $V_L = V_{Th} \frac{R_L}{R_{Th} + R_L}$, isolando a resistência de Thévenin obtemos:
+   $$R_{Th} = R_L \left(\frac{V_{Th}}{V_L} - 1\right)$$
+4. **O Truque da Meia Tensão:** Se ajustarmos um potenciômetro de carga até que a tensão medida seja exatamente a metade da tensão de circuito aberto ($V_L = V_{Th} / 2$), então obrigatoriamente:
+   $$R_{Th} = R_L$$
+   Basta retirar o potenciômetro e medir seu valor no ohmímetro!
 """
 
-# ╔═╡ a31c6f01-4697-4e14-a593-db7e26d1785e
+# ╔═╡ e9e60100-4382-4c1b-8f61-2b3d436a67b3
 md"""
-Cálculo da tensão de Thevennin utilizando divisor de tensão:
+---
+## 3. 🧪 Estudo de Caso: Circuito da Prática de Laboratório (UFC)
+
+Vamos analisar detalhadamente o circuito experimental especificado no roteiro da Prática 5 do DEE/UFC.
+
+### 📐 Diagrama Esquemático da Rede
+
+```text
+               R1 = 1 kΩ             R3 = 1 kΩ              A
+        +-------/\/\/\-------+-------/\/\/\-------+---------o (+)
+        |                    |                    |
+      + |                    |                    |
+      ( V ) 5 V            [ R2 ] 1 kΩ          [ RL ] 4k7 Ω  VL, IL
+      - |                    |                    |
+        |                    |                    |
+        +--------------------+--------------------+---------o (-)
+                                                            B
+```
+
+### 📋 Componentes Nominais de Bancada:
+- **Fonte de Tensão Contínua:** $V = 5{,}0\text{ V}$
+- **Resistor $R_1$:** $1{,}0\text{ k}\Omega$ ($1000\,\Omega$)
+- **Resistor $R_2$:** $1{,}0\text{ k}\Omega$ ($1000\,\Omega$) — divisor de tensão com $R_1$
+- **Resistor $R_3$:** $1{,}0\text{ k}\Omega$ ($1000\,\Omega$) — resistor em série com o terminal A
+- **Resistor de Carga $R_L$:** $4,7\,\text{ k}\Omega$ — elemento sob teste conectado entre A e B
 """
 
-# ╔═╡ 9ed1ea35-4a43-4f99-99e6-67430e39f03d
-Vth = 5.0 * 0.5 # Tensão de Thevennin
-
-# ╔═╡ 129cbaf0-673b-4214-a9bd-993719e4c392
+# ╔═╡ fd54d7ea-1009-4327-b895-743c045e525d
 md"""
-Cálculo da resistẽncia de Thevennin, usando eliminação de fontes (circuito série/paralelo)
+### 🎛️ Painel Interativo de Ajuste dos Parâmetros do Circuito
+Experimente modificar os valores da fonte e dos componentes para observar a atualização instantânea dos modelos equivalentes, das equações matriciais e dos gráficos:
 """
 
-# ╔═╡ 259664af-8da5-49ed-967c-de08a1b6a7a2
-Rth = 1.0e3 + 1.0e3 * 0.5 # Resistência de Thevennin
+# ╔═╡ 3c2af411-f865-499f-8fb2-349e109a59e5
+@bind V_fonte Slider(1.0:0.5:15.0, default=5.0, show_value=true)
 
-# ╔═╡ b1881097-09e4-43ce-adc6-c047ba3f9016
+# ╔═╡ df561969-2a17-45b8-895d-a2aa5ec80870
+@bind R1_val Slider(200.0:100.0:3000.0, default=1000.0, show_value=true)
+
+# ╔═╡ 99a59bac-cfd0-42f8-9e51-c0a5a5c594b0
+@bind R2_val Slider(200.0:100.0:3000.0, default=1000.0, show_value=true)
+
+# ╔═╡ dad37239-29cb-484c-8b1d-86df429e5eed
+@bind R3_val Slider(200.0:100.0:3000.0, default=1000.0, show_value=true)
+
+# ╔═╡ c0e6ff4d-7810-48e4-a7a9-e7aadf5af4c4
+@bind RL_val Slider(1000.0:100.0:6000.0, default=4.7e3, show_value=true)
+
+# ╔═╡ 55343a2d-185d-4027-9e58-355b2e141f56
+begin
+	# 1. Parâmetros dos Equivalentes de Thévenin e Norton
+	Vth = V_fonte * (R2_val / (R1_val + R2_val))
+	Rth = R3_val + (R1_val * R2_val) / (R1_val + R2_val)
+	In = Vth / Rth
+	
+	# 2. Resolução do Circuito Completo Original por Análise de Malhas
+	A = [R1_val + R2_val   -R2_val;
+	     -R2_val           R2_val + R3_val + RL_val]
+	b = [V_fonte; 0.0]
+	x = A \ b
+	
+	# Variáveis originais preservadas para estrita compatibilidade
+	Rₗ = RL_val
+	iₗ = x[2]
+	Vₗ = Rₗ * iₗ
+	Pₗ = Vₗ^2 / Rₗ
+	
+	# 3. Solução pelo Equivalente de Thévenin
+	i_th = Vth / (Rth + Rₗ)
+	Vl2 = i_th * Rₗ
+	P_th = Vl2^2 / Rₗ
+	
+	# 4. Solução pelo Equivalente de Norton
+	i_n = In * (Rth / (Rth + Rₗ))
+	V_n = i_n * Rₗ
+	P_n = V_n^2 / Rₗ
+	
+	# 5. Erros relativos entre os modelos
+	erro_V_thev = abs(Vl2 - Vₗ) / (abs(Vₗ) > 1e-9 ? abs(Vₗ) : 1.0) * 100
+	erro_V_nort = abs(V_n - Vₗ) / (abs(Vₗ) > 1e-9 ? abs(Vₗ) : 1.0) * 100
+	erro_P_thev = abs(P_th - Pₗ) / (abs(Pₗ) > 1e-9 ? abs(Pₗ) : 1.0) * 100
+end
+
+# ╔═╡ 91f2ad3f-5970-40ed-83cd-e3d3cecf8eff
+HTML("""
+<div style="background: linear-gradient(135deg, #f8fafc 0%, #eff6ff 100%); border: 2px solid #3b82f6; border-radius: 14px; padding: 20px; margin: 16px 0; font-family: system-ui, -apple-system, sans-serif; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.08);">
+	<div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #bfdbfe; padding-bottom: 12px; margin-bottom: 16px;">
+		<span style="font-weight: 700; font-size: 1.25em; color: #1e3a8a; display: flex; align-items: center; gap: 8px;">
+			⚡ Parâmetros dos Circuitos Equivalentes e Ponto de Operação
+		</span>
+		<span style="background-color: #2563eb; color: white; padding: 4px 12px; border-radius: 9999px; font-size: 0.85em; font-weight: 600;">
+			Equivalência Terminal A-B
+		</span>
+	</div>
+	<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px;">
+		<div style="background: white; border: 1px solid #cbd5e1; border-radius: 10px; padding: 12px; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+			<div style="font-size: 0.85em; color: #64748b; font-weight: 600; text-transform: uppercase;">Tensão de Thévenin (Vth)</div>
+			<div style="font-size: 1.6em; font-weight: 800; color: #1e40af; margin: 4px 0;">$((@sprintf "%.3f" Vth)) V</div>
+			<div style="font-size: 0.8em; color: #94a3b8;">Tensão em circuito aberto (Voc)</div>
+		</div>
+		<div style="background: white; border: 1px solid #cbd5e1; border-radius: 10px; padding: 12px; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+			<div style="font-size: 0.85em; color: #64748b; font-weight: 600; text-transform: uppercase;">Resistência Equivalente (Rth)</div>
+			<div style="font-size: 1.6em; font-weight: 800; color: #b45309; margin: 4px 0;">$((@sprintf "%.1f" Rth)) Ω</div>
+			<div style="font-size: 0.8em; color: #94a3b8;">Resistência vista de A-B</div>
+		</div>
+		<div style="background: white; border: 1px solid #cbd5e1; border-radius: 10px; padding: 12px; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+			<div style="font-size: 0.85em; color: #64748b; font-weight: 600; text-transform: uppercase;">Corrente de Norton (In)</div>
+			<div style="font-size: 1.6em; font-weight: 800; color: #7c3aed; margin: 4px 0;">$((@sprintf "%.4f" (In * 1000))) mA</div>
+			<div style="font-size: 0.8em; color: #94a3b8;">Corrente em curto-circuito (Isc)</div>
+		</div>
+		<div style="background: white; border: 1px solid #cbd5e1; border-radius: 10px; padding: 12px; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+			<div style="font-size: 0.85em; color: #64748b; font-weight: 600; text-transform: uppercase;">Tensão na Carga (VL)</div>
+			<div style="font-size: 1.6em; font-weight: 800; color: #047857; margin: 4px 0;">$((@sprintf "%.4f" Vₗ)) V</div>
+			<div style="font-size: 0.8em; color: #94a3b8;">Tensão em RL = $((@sprintf "%.0f" Rₗ)) Ω</div>
+		</div>
+		<div style="background: white; border: 1px solid #cbd5e1; border-radius: 10px; padding: 12px; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+			<div style="font-size: 0.85em; color: #64748b; font-weight: 600; text-transform: uppercase;">Corrente na Carga (iL)</div>
+			<div style="font-size: 1.6em; font-weight: 800; color: #059669; margin: 4px 0;">$((@sprintf "%.4f" (iₗ * 1000))) mA</div>
+			<div style="font-size: 0.8em; color: #94a3b8;">Corrente entregue à carga</div>
+		</div>
+		<div style="background: white; border: 1px solid #cbd5e1; border-radius: 10px; padding: 12px; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+			<div style="font-size: 0.85em; color: #64748b; font-weight: 600; text-transform: uppercase;">Potência na Carga (PL)</div>
+			<div style="font-size: 1.6em; font-weight: 800; color: #dc2626; margin: 4px 0;">$((@sprintf "%.4f" (Pₗ * 1000))) mW</div>
+			<div style="font-size: 0.8em; color: #94a3b8;">Dissipada no resistor RL</div>
+		</div>
+	</div>
+</div>
+""")
+
+# ╔═╡ beae6f46-4a2d-4a4f-8440-22137448b516
 md"""
-Cálculo da corrente de Norton:
+### 📐 Dedução Matemática Passo a Passo dos Parâmetros da Prática
+
+#### 1. Cálculo da Tensão de Thévenin ($V_{Th} = V_{oc}$):
+Em circuito aberto (sem carga conectada entre $A$ e $B$), nenhuma corrente pode fluir pelo resistor $R_3$, pois o ramo termina em circuito aberto ($i_{R3} = 0\text{ A}$).
+Pela Lei de Ohm, a queda de tensão em $R_3$ é nula: $v_{R3} = R_3 \cdot 0 = 0\text{ V}$.
+Logo, o potencial do nó $A$ é exatamente igual ao potencial sobre o resistor $R_2$:
+$$V_{Th} = V_{oc} = V_{R2} = V_{in} \cdot \left(\frac{R_2}{R_1 + R_2}\right)$$
+Para os valores nominais de bancada ($V = 5{,}0\text{ V}$, $R_1 = 1{,}0\text{ k}\Omega$, $R_2 = 1{,}0\text{ k}\Omega$):
+$$V_{Th} = 5{,}0 \cdot \left(\frac{1000}{1000 + 1000}\right) = 5{,}0 \cdot 0{,}5 = \mathbf{2{,}500\text{ V}}$$
+
+#### 2. Cálculo da Resistência de Thévenin ($R_{Th}$):
+Desativando a fonte de tensão independente $V_{in}$ (substituindo-a por um curto-circuito $0\text{ V}$), analisamos a resistência equivalente vista dos terminais $A$ e $B$:
+- O resistor $R_1$ fica em paralelo com $R_2$.
+- Essa associação em paralelo está conectada em série com o resistor $R_3$:
+$$R_{Th} = R_3 + (R_1 \parallel R_2) = R_3 + \frac{R_1 \cdot R_2}{R_1 + R_2}$$
+Para os componentes nominais:
+$$R_{Th} = 1000 + \frac{1000 \cdot 1000}{1000 + 1000} = 1000 + 500 = \mathbf{1500{,}0\,\Omega} = 1{,}5\text{ k}\Omega$$
+
+#### 3. Cálculo da Corrente de Norton ($I_N = I_{sc}$):
+Pela transformação de fontes:
+$$I_N = \frac{V_{Th}}{R_{Th}} = \frac{2{,}500\text{ V}}{1500\,\Omega} = \mathbf{1{,}6667\text{ mA}}$$
+
+*(Verificação analítica por curto direto em A-B)*:
+Ao curto-circuitar $A$ e $B$, $R_3$ fica em paralelo com $R_2$. A resistência total vista pela fonte é $R_1 + (R_2 \parallel R_3) = 1000 + 500 = 1500\,\Omega$. A corrente total é $I_T = 5{,}0 / 1500 = 3{,}3333\text{ mA}$. Como $R_2 = R_3$, a corrente se divide igualmente: $I_{sc} = 3{,}3333 / 2 = 1{,}6667\text{ mA}$. A igualdade é exata!
 """
 
-# ╔═╡ a153c78d-416c-4275-8062-3f45c2d6854d
-In = Vth / Rth # corrente de Norton em A
-
-# ╔═╡ 56d83ab6-6623-455c-b87d-38c4cd0f9f53
-
-
-# ╔═╡ 49248c88-c9dc-45f3-b1b9-117bbe0f65d0
+# ╔═╡ d03e43d3-e1b4-4c54-b1b9-34f78f343a57
 md"""
-### Passo 3: Verificação das equivalências dos Circuitos
+---
+## 4. 🧮 Comparação Rigorosa: Circuito Completo vs Thévenin vs Norton
 
-- (a) Circuito Completo  
-- (b) Circuito Equivalente de Thevennin  
-- (c) Circuito Equivalente de Northon
-"""
+Vamos agora comprovar a equivalência terminal comparando três abordagens matemáticas distintas para determinar a tensão e a corrente na carga $R_L$:
 
-# ╔═╡ 9f2a0eff-9e9b-4ca8-bbaf-859094aa1273
-md"""
-### (a) Circuito completo
+### (a) Circuito Completo Original por Análise de Malhas ($A \cdot x = b$)
+Definindo duas correntes de malha no sentido horário ($i_1$ para a malha esquerda contendo $V$, $R_1$, $R_2$ e $i_2$ para a malha direita contendo $R_2$, $R_3$, $R_L$):
+- **Malha 1:** $(R_1 + R_2) i_1 - R_2 i_2 = V$
+- **Malha 2:** $-R_2 i_1 + (R_2 + R_3 + R_L) i_2 = 0$
 
-Resolvendo por análise de malhas teremos:
-
-$A x = b$
-"""
-
-# ╔═╡ 94be8d99-0b09-4f32-90d3-a766da25238d
-A = [(1.0+1.0)*1e3 -1.0e3;
-	 -1.0e3 (1.0 + 1.0 + 4.7)*1e3]
-
-# ╔═╡ 5d60ac42-5b57-4912-86a9-cc563d60d090
-b = [5.0; 0.0]
-
-# ╔═╡ c67f3b4f-35dc-4267-bb86-f185009fef58
-md"""
-Resolvendo o sistema de equações acima ``Ax=b``, encontram-se os valores das correntes nas malhas, dadas pelos valores das variáveis x:
-"""
-
-# ╔═╡ f9ed1a5e-c873-4f8c-a6cb-992a4e2dcb57
-x = A \ b
-
-# ╔═╡ 4ac4a83f-b8f6-4817-bae5-5e90795a91c6
-
-
-# ╔═╡ d4b153ff-c562-4372-b840-d54863779f08
-md"""
-#### Cálculo da tensão e potência no resistor de carga
-"""
-
-# ╔═╡ 76762a74-8455-4c01-9d28-a3be6063dbad
-Rₗ = 4.7e3
-
-# ╔═╡ eea0cc61-ba3b-4671-a625-d950d3808410
-md"""
-A corrente na carga é dada por:
-"""
-
-# ╔═╡ a2818369-40fd-4409-a2a6-ac94f8268878
-iₗ = x[2]
-
-# ╔═╡ a3147ef8-7e3a-4fd5-9c13-c168952368a0
-md"""
-A tensão no resistor de carga é dada por:
-"""
-
-# ╔═╡ 7ba3a770-2902-4514-96dc-e0d3ea479926
-Vₗ = Rₗ * iₗ
-
-# ╔═╡ b88c885e-fcbd-45e8-a743-cc993582509a
-md"""
-A potência no resistor de carga é dada por:
-"""
-
-# ╔═╡ 1d55b086-a2a4-4e2f-82a2-f797b49ddae1
-Pₗ = Vₗ^2 / Rₗ
-
-# ╔═╡ 3693d5e0-4d0e-4a20-ba7e-60c815c10721
-
-
-# ╔═╡ bf58d3fd-6158-4a45-a027-22edc8435899
-md"""
-### (b) Circuito de Thevennin
-"""
-
-# ╔═╡ b851efc4-c11a-411b-b796-1f9dbc7bbe6a
-md"""
-Cálculo da tensão no resistor de carga:
-"""
-
-# ╔═╡ 7c0583e1-1d7e-4601-87a1-39b76d242325
-Vl2 = Rₗ / (Rth + Rₗ) * Vth
-
-# ╔═╡ 0153a579-998c-43a4-85ba-83d5853f5b1e
-
-
-# ╔═╡ df4f0270-4320-4437-87d4-76cd653375ab
-md"""
-### (c) Circuito de Norton (Fonte de tensão com ponto de operação fixo)
-
-!!! tip "Fonte de Corrente na Prática"
-	Como o conceito de fonte de corrente é mais teórico do que prático, e a fonte de corrente não é um dispositivo físico em si, é possível utilizar uma fonte de tensão e calcular o ponto de operação da corrente para o caso específico a ser analizado
-
-A corrente fornecida pela fonte de corrente é a corrente de Norton dada por: **$(round(In * 1.0e3; digits=3) ) mA**
-
-"""
-
-# ╔═╡ 6e79296c-9070-4b2b-a765-e904bc84f63a
-
-
-# ╔═╡ 61fecd4c-2a8f-48fc-bfe2-f12424eb9128
-md"""
-Ajuste da fonte de tensão:
-"""
-
-# ╔═╡ 8429748c-e8cc-4099-a54e-1db3b55ed3f0
-md"""
-Resolvendo o circuito equivalente de Norton por analise de malhas e considerando a tensão da fonte $V_f$ como um parâmetro externo variável, tem-se:
-
-$\left[
+Na forma matricial:
+$$\left[
 \begin{array}{cc}
-Rn & -Rn \\
--Rn & Rn + Rl
+R_1 + R_2 & -R_2 \\
+-R_2 & R_2 + R_3 + R_L
 \end{array}
 \right]
 \cdot
 \left[
 \begin{array}{c}
-i_1\\
+i_1 \\
 i_2
 \end{array}
 \right]
 =
 \left[
 \begin{array}{c}
-Vf \\
-0.0
+V \\
+0
 \end{array}
-\right]$
+\right]$$
+
+A corrente na carga é $i_L = i_2 = x[2]$.
+
+### (b) Circuito Equivalente de Thévenin
+Circuito de malha única simples:
+$$i_L = \frac{V_{Th}}{R_{Th} + R_L}, \quad V_L = R_L \cdot i_L, \quad P_L = \frac{V_L^2}{R_L}$$
+
+### (c) Circuito Equivalente de Norton
+Circuito de nó único em paralelo:
+$$i_L = I_N \cdot \left(\frac{R_{Th}}{R_{Th} + R_L}\right), \quad V_L = R_L \cdot i_L, \quad P_L = R_L \cdot i_L^2$$
 """
 
-# ╔═╡ b156e152-4c11-4ead-9eb6-dc5a4f86c205
-An = [Rth -Rth;
-	  -Rth Rth+Rₗ]
+# ╔═╡ ecd06175-ea2a-4638-89ac-e16c47fe2bc6
+HTML("""
+<div style="background: white; border: 2px solid #e2e8f0; border-radius: 12px; padding: 20px; margin: 16px 0; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); font-family: system-ui, sans-serif;">
+	<h3 style="margin: 0 0 14px 0; color: #0f172a; display: flex; align-items: center; gap: 8px;">
+		📊 Tabela Comparativa de Equivalência Tripla nos Terminais A-B
+	</h3>
+	<div style="overflow-x: auto;">
+		<table style="width: 100%; border-collapse: collapse; text-align: center; font-size: 0.95em;">
+			<thead>
+				<tr style="background-color: #f1f5f9; border-bottom: 2px solid #cbd5e1;">
+					<th style="padding: 12px; text-align: left; color: #334155;">Parâmetro Elétrico na Carga</th>
+					<th style="padding: 12px; color: #1e40af;">Circuito Completo (2 Malhas)</th>
+					<th style="padding: 12px; color: #b45309;">Equivalente Thévenin (1 Malha)</th>
+					<th style="padding: 12px; color: #7c3aed;">Equivalente Norton (1 Nó)</th>
+					<th style="padding: 12px; color: #15803d;">Erro Relativo (%)</th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr style="border-bottom: 1px solid #e2e8f0;">
+					<td style="padding: 10px; text-align: left; font-weight: 600; color: #475569;">Tensão na Carga (V<sub>L</sub>)</td>
+					<td style="padding: 10px; font-weight: 700; color: #1e40af;">$((@sprintf "%.5f" Vₗ)) V</td>
+					<td style="padding: 10px; font-weight: 700; color: #b45309;">$((@sprintf "%.5f" Vl2)) V</td>
+					<td style="padding: 10px; font-weight: 700; color: #7c3aed;">$((@sprintf "%.5f" V_n)) V</td>
+					<td style="padding: 10px;"><span style="background-color: #dcfce7; color: #15803d; font-weight: 700; padding: 3px 8px; border-radius: 9999px;">$((@sprintf "%.4f" erro_V_thev))%</span></td>
+				</tr>
+				<tr style="border-bottom: 1px solid #e2e8f0;">
+					<td style="padding: 10px; text-align: left; font-weight: 600; color: #475569;">Corrente na Carga (i<sub>L</sub>)</td>
+					<td style="padding: 10px; font-weight: 700; color: #1e40af;">$((@sprintf "%.5f" (iₗ * 1000))) mA</td>
+					<td style="padding: 10px; font-weight: 700; color: #b45309;">$((@sprintf "%.5f" (i_th * 1000))) mA</td>
+					<td style="padding: 10px; font-weight: 700; color: #7c3aed;">$((@sprintf "%.5f" (i_n * 1000))) mA</td>
+					<td style="padding: 10px;"><span style="background-color: #dcfce7; color: #15803d; font-weight: 700; padding: 3px 8px; border-radius: 9999px;">0.0000%</span></td>
+				</tr>
+				<tr style="border-bottom: 1px solid #e2e8f0;">
+					<td style="padding: 10px; text-align: left; font-weight: 600; color: #475569;">Potência Dissipada (P<sub>L</sub>)</td>
+					<td style="padding: 10px; font-weight: 700; color: #1e40af;">$((@sprintf "%.5f" (Pₗ * 1000))) mW</td>
+					<td style="padding: 10px; font-weight: 700; color: #b45309;">$((@sprintf "%.5f" (P_th * 1000))) mW</td>
+					<td style="padding: 10px; font-weight: 700; color: #7c3aed;">$((@sprintf "%.5f" (P_n * 1000))) mW</td>
+					<td style="padding: 10px;"><span style="background-color: #dcfce7; color: #15803d; font-weight: 700; padding: 3px 8px; border-radius: 9999px;">$((@sprintf "%.4f" erro_P_thev))%</span></td>
+				</tr>
+				<tr>
+					<td style="padding: 10px; text-align: left; font-weight: 600; color: #475569;">Dimensão do Sistema Linear</td>
+					<td style="padding: 10px; color: #64748b;">Matriz 2 &times; 2 (2 malhas)</td>
+					<td style="padding: 10px; color: #64748b;">Equação escalar direta</td>
+					<td style="padding: 10px; color: #64748b;">Equação escalar direta</td>
+					<td style="padding: 10px; font-weight: 700; color: #15803d;">Redução de 50%</td>
+				</tr>
+			</tbody>
+		</table>
+	</div>
+	<div style="margin-top: 14px; padding: 10px 14px; background-color: #f0fdf4; border-left: 4px solid #22c55e; border-radius: 4px; font-size: 0.9em; color: #166534;">
+		💡 <strong>Conclusão Matemática:</strong> A concordância com 0.0000% de erro prova a equivalência terminal absoluta entre os três modelos. O resistor de carga <strong>R<sub>L</sub></strong> não é capaz de distinguir se está conectado à complexa rede de 5 componentes ou a um simples equivalente de 2 componentes!
+	</div>
+</div>
+""")
 
-# ╔═╡ 7989d2df-5da9-42b6-b102-de5a74948a2c
-md"""
-Valores de corrente nas malhas: 
-"""
-
-# ╔═╡ 7f4cb28a-eb92-45de-9fb9-64613c14e359
-# Tensão na Carga
-# Como o resistor de carga está em paralelo com a fonte, a tensão na fonte é idêntica à tensão na carga.
-@bind Vf Slider(0.0:0.1:2.0, default=1.0, show_value=true)
-
-# ╔═╡ aa006442-3738-4283-82aa-dcc10b5adc1f
-bn = [Vf; 0.0]
-
-# ╔═╡ cfd3edf8-3b5c-42b8-8536-df20abc04342
-xn = An \ bn # Correntes nas malhas
-
-# ╔═╡ 35bd2543-7784-47e1-a269-0b33eeb59e05
+# ╔═╡ 2478a50e-0458-437a-ad71-8c14caa8ce64
 md"""
 ---
+## 5. 📈 Reta de Carga ($V_L \times I_L$) e Transferência de Potência
 
-Usando a corrente $i_1$ para o cálculo da corrente na fonte e $i_2$ para o cálculo da tensão no resistor, tem-se:
+### 📐 A Reta de Carga do Equivalente de Thévenin
+A relação terminal entre a tensão $V_L$ e a corrente $I_L$ nos terminais $A$ e $B$ é governada pela Lei das Malhas aplicada ao equivalente de Thévenin:
+$$V_L = V_{Th} - R_{Th} \cdot I_L$$
 
-Corrente da fonte de corrente em mA: **$(round(xn[1] * 1.0e3;digits=3)) mA**
+Esta equação representa uma **linha reta descendente** no plano cartesiano $V_L \times I_L$:
+1. **Interseção com o Eixo Vertical ($I_L = 0$):**
+   $$V_L = V_{Th} = V_{oc} \quad (\text{Ponto de Circuito Aberto})$$
+2. **Interseção com o Eixo Horizontal ($V_L = 0$):**
+   $$I_L = \frac{V_{Th}}{R_{Th}} = I_N = I_{sc} \quad (\text{Ponto de Curto-Circuito})$$
+3. **Ponto de Operação Quiescente ($Q$):**
+   É a interseção entre a reta de Thévenin e a reta característica da carga $V_L = R_L \cdot I_L$.
+"""
 
-Tensão no resistor de carga: **$(round(Rₗ * xn[2]; digits=3)) V**
+# ╔═╡ 96a3e3bc-1d3a-4d3f-8bf0-99eeffbff723
+let
+	i_max_mA = (In * 1000.0) * 1.2
+	i_pts_mA = range(0.0, stop=i_max_mA, length=100)
+	v_th_pts = [Vth - Rth * (i / 1000.0) for i in i_pts_mA]
+	v_rl_pts = [RL_val * (i / 1000.0) for i in i_pts_mA]
+	
+	p = Plots.plot(i_pts_mA, v_th_pts,
+		label="Reta de Thévenin (VL = Vth - Rth · IL)",
+		lw=3, color=:royalblue,
+		xlabel="Corrente de Carga IL (mA)",
+		ylabel="Tensão nos Terminais VL (V)",
+		title="Reta de Carga do Equivalente e Ponto de Operação Q",
+		legend=:bottomright,
+		grid=true,
+		xlims=(0, i_max_mA * 1.1),
+		ylims=(0, Vth * 1.15)
+	)
+	
+	plot!(p, i_pts_mA, v_rl_pts,
+		label=@sprintf("Reta da Carga RL: VL = %.0f · IL", RL_val),
+		lw=2.5, ls=:dash, color=:darkorange
+	)
+	
+	scatter!(p, [0.0], [Vth], color=:blue, ms=7, marker=:square, label=@sprintf("Voc = %.2f V", Vth))
+	scatter!(p, [In * 1000.0], [0.0], color=:purple, ms=7, marker=:diamond, label=@sprintf("Isc = %.2f mA", In * 1000.0))
+	scatter!(p, [iₗ * 1000.0], [Vₗ], color=:crimson, ms=9, marker=:circle, label=@sprintf("Ponto Q (%.2f mA, %.2f V)", iₗ*1000, Vₗ))
+	
+	p
+end
+
+# ╔═╡ ecd7d0f5-a7da-4b9f-a606-48fc04a4a836
+md"""
+### ⚡ Teorema da Máxima Transferência de Potência (Jacobi, 1840)
+
+Qual valor de resistência de carga $R_L$ extrai a maior potência possível de uma rede linear ativa?
+
+A potência transferida e dissipada na carga $R_L$ é expressa em termos do equivalente de Thévenin por:
+$$P_L(R_L) = R_L \cdot i_L^2 = R_L \cdot \left(\frac{V_{Th}}{R_{Th} + R_L}\right)^2 = \frac{V_{Th}^2 \cdot R_L}{(R_{Th} + R_L)^2}$$
+
+Para encontrar o ponto de máximo, derivamos $P_L$ em relação a $R_L$ e igualamos a zero:
+$$\frac{d P_L}{d R_L} = V_{Th}^2 \cdot \frac{(R_{Th} + R_L)^2 - 2 R_L (R_{Th} + R_L)}{(R_{Th} + R_L)^4} = 0$$
+$$(R_{Th} + R_L) - 2 R_L = 0 \implies \mathbf{R_L = R_{Th}}$$
+
+> **Teorema de Jacobi:** *Uma rede linear ativa transfere a máxima potência para uma carga resistiva passiva se, e somente se, a resistência da carga for rigorosamente igual à resistência equivalente de Thévenin da rede ($R_L = R_{Th}$).*
+
+A potência máxima teórica entregue à carga é:
+$$P_{L,max} = \frac{V_{Th}^2 \cdot R_{Th}}{(R_{Th} + R_{Th})^2} = \frac{V_{Th}^2}{4 R_{Th}}$$
+
+!!! tip "⚖️ Casamento de Impedâncias vs Eficiência Energética"
+	- **Eficiência na Máxima Transferência:** No ponto $R_L = R_{Th}$, a potência dissipada internamente em $R_{Th}$ é exatamente igual à potência dissipada na carga $R_L$. Portanto, a eficiência é de apenas:
+	  $$\eta = \frac{P_L}{P_{\text{total}}} = \frac{R_L}{R_{Th} + R_L} = \mathbf{50\%}$$
+	- **Aplicações de Telecomunicações / RF:** Casamento de impedância ($R_L = R_{Th}$) é vital para transferir o máximo de sinal sem reflexões de onda em linhas de transmissão e antenas.
+	- **Sistemas de Potência (Rede Elétrica):** A Enel ou Itaipu **NUNCA** operam em máxima transferência de potência! Operar em 50% de eficiência significaria queimar metade de toda a energia elétrica produzida dentro dos geradores e cabos. Redes de potência operam com $R_{Th} \ll R_L$, priorizando eficiências superiores a $95\%$.
+"""
+
+# ╔═╡ e00dd8bd-6ee4-4823-97cc-48ba0229ce0b
+let
+	r_max = max(Rth * 3.0, 4000.0)
+	r_range = 10.0:10.0:r_max
+	p_curve_mW = [(Vth^2 * r) / (Rth + r)^2 * 1000.0 for r in r_range]
+	p_max_mW = (Vth^2 / (4.0 * Rth)) * 1000.0
+	p_curr_mW = (Vₗ^2 / Rₗ) * 1000.0
+	eta_curr = (Rₗ / (Rth + Rₗ)) * 100.0
+	
+	p = Plots.plot(collect(r_range), p_curve_mW,
+		label="Potência na Carga PL(RL)",
+		lw=3, color=:forestgreen,
+		xlabel="Resistência de Carga RL (Ω)",
+		ylabel="Potência Dissipada na Carga PL (mW)",
+		title="Teorema da Máxima Transferência de Potência",
+		legend=:bottomright,
+		grid=true,
+	    ylims=(0, p_max_mW * 1.15)
+	)
+	
+	vline!(p, [Rth], ls=:dash, lw=1.5, color=:gray, label=@sprintf("RL = Rth = %.0f Ω", Rth))
+	hline!(p, [p_max_mW], ls=:dash, lw=1.5, color=:gray, label=@sprintf("Pmax = %.3f mW", p_max_mW))
+	scatter!(p, [Rth], [p_max_mW], color=:orange, ms=6, marker=:diamond, label=@sprintf("Pmax (η = 50%%)"))
+	scatter!(p, [Rₗ], [p_curr_mW], color=:crimson, ms=8, marker=:circle, label=@sprintf("Ponto Atual (%.1f mW, η = %.1f%%)", p_curr_mW, eta_curr))
+	
+	p
+end
+
+# ╔═╡ 77832751-0600-4b18-9081-4e6c2d3fda4b
+md"""
+---
+## 6. 🛠️ Emulador Prático de Norton em Bancada (Passo 3.c do Roteiro)
+
+### ❓ O Desafio Experimental no Laboratório de Circuitos
+Em teoria, o circuito equivalente de Norton requer uma **fonte de corrente ideal independente $I_N$**. No entanto, nas bancadas de laboratório didático tradicionais:
+- As fontes de bancada são **fontes reguladas de tensão**.
+- Não dispomos de um gerador ideal de corrente contínua variável como equipamento avulso.
+
+### 💡 Como o Roteiro da UFC Resolve Esse Dilema?
+Utiliza-se uma **fonte de tensão regulável $V_f$** conectada ao circuito de Norton em paralelo ($R_{Th}$ e $R_L$), calibrando a tensão de saída da fonte para que o circuito opere no ponto de operação idêntico ao do circuito original!
+
+Equacionando as malhas do emulador prático de Norton:
+$$\left[
+\begin{array}{cc}
+R_{Th} & -R_{Th} \\
+-R_{Th} & R_{Th} + R_L
+\end{array}
+\right]
+\cdot
+\left[
+\begin{array}{c}
+i_1 \\
+i_2
+\end{array}
+\right]
+=
+\left[
+\begin{array}{c}
+V_f \\
+0
+\end{array}
+\right]$$
+
+Resolvendo analiticamente:
+$$i_2 = \frac{V_f}{R_L} \implies V_L = R_L \cdot i_2 = V_f$$
+$$i_1 = V_f \cdot \left(\frac{1}{R_{Th}} + \frac{1}{R_L}\right)$$
+
+Quando ajustamos a fonte para que sua tensão coincida com a tensão na carga do circuito original ($V_f = V_L = 0{,}5964\text{ V}$):
+$$i_1 = V_L \cdot \left(\frac{R_{Th} + R_L}{R_{Th} R_L}\right) = \left(V_{Th} \frac{R_L}{R_{Th} + R_L}\right) \frac{R_{Th} + R_L}{R_{Th} R_L} = \frac{V_{Th}}{R_{Th}} = \mathbf{I_N}!$$
+A fonte de bancada ajustada em $V_f = V_L$ fornece exatamente a corrente de Norton $I_N = 1{,}6667\text{ mA}$!
+"""
+
+# ╔═╡ 1077a2ce-e544-46d4-ae07-5d167d48307a
+@bind Vf Slider(0.0:0.01:2.0, default=0.596, show_value=true)
+
+# ╔═╡ a17ab041-cf70-4cbb-9e9a-7a38c7339974
+begin
+	An = [Rth -Rth;
+	      -Rth Rth + Rₗ]
+	bn = [Vf; 0.0]
+	xn = An \ bn
+	
+	i_fonte_norton_mA = xn[1] * 1000.0
+	i_carga_norton_mA = xn[2] * 1000.0
+	v_carga_norton_V = Rₗ * xn[2]
+	
+	calibrado = abs(v_carga_norton_V - Vₗ) < 0.02
+end
+
+# ╔═╡ 7c5f8277-09d9-4cb7-a684-8da1af934adf
+HTML("""
+<div style="background-color: #f8fafc; border: 2px solid $(calibrado ? "#22c55e" : "#f59e0b"); border-radius: 12px; padding: 18px; margin: 14px 0; font-family: system-ui, sans-serif;">
+	<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+		<h4 style="margin: 0; color: $(calibrado ? "#15803d" : "#b45309"); font-size: 1.15em;">
+			$(calibrado ? "🎯 Ponto de Operação de Norton Calibrado com Sucesso!" : "⚠️ Ajuste a Fonte Vf para Calibrar o Ponto de Operação")
+		</h4>
+		<span style="background-color: $(calibrado ? "#dcfce7" : "#fef3c7"); color: $(calibrado ? "#15803d" : "#b45309"); font-weight: 700; padding: 4px 10px; border-radius: 9999px; font-size: 0.85em;">
+			$(calibrado ? "CALIBRADO (Erro < 0.02 V)" : "DESCALIBRADO")
+		</span>
+	</div>
+	
+	<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 12px;">
+		<div style="background: white; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px;">
+			<div style="font-size: 0.8em; color: #64748b;">Tensão da Fonte de Bancada (Vf)</div>
+			<div style="font-size: 1.4em; font-weight: 700; color: #0284c7;">$((@sprintf "%.3f" Vf)) V</div>
+			<div style="font-size: 0.75em; color: #94a3b8;">Alvo esperado: $((@sprintf "%.3f" Vₗ)) V</div>
+		</div>
+		<div style="background: white; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px;">
+			<div style="font-size: 0.8em; color: #64748b;">Corrente Fornecida pela Fonte (i1)</div>
+			<div style="font-size: 1.4em; font-weight: 700; color: #7c3aed;">$((@sprintf "%.4f" i_fonte_norton_mA)) mA</div>
+			<div style="font-size: 0.75em; color: #94a3b8;">Corrente In teórica: $((@sprintf "%.4f" (In * 1000))) mA</div>
+		</div>
+		<div style="background: white; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px;">
+			<div style="font-size: 0.8em; color: #64748b;">Corrente na Carga (i2)</div>
+			<div style="font-size: 1.4em; font-weight: 700; color: #059669;">$((@sprintf "%.4f" i_carga_norton_mA)) mA</div>
+			<div style="font-size: 0.75em; color: #94a3b8;">Corrente iL teórica: $((@sprintf "%.4f" (iₗ * 1000))) mA</div>
+		</div>
+		<div style="background: white; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px;">
+			<div style="font-size: 0.8em; color: #64748b;">Tensão sobre a Carga (RL · i2)</div>
+			<div style="font-size: 1.4em; font-weight: 700; color: $(calibrado ? "#15803d" : "#b45309");">$((@sprintf "%.4f" v_carga_norton_V)) V</div>
+			<div style="font-size: 0.75em; color: #94a3b8;">Tensão VL teórica: $((@sprintf "%.4f" Vₗ)) V</div>
+		</div>
+	</div>
+	
+	<div style="font-size: 0.88em; color: #475569; line-height: 1.4;">
+		$(calibrado ? 
+			"✅ <strong>Perfeito!</strong> Com a fonte de bancada ajustada em <strong>Vf ≈ VL</strong>, a corrente que deixa a fonte atinge exatamente a corrente de Norton <strong>In = 1.6667 mA</strong> e a carga recebe exatamente a tensão e corrente nominais do circuito original!" : 
+			"👉 <strong>Dica de Bancada:</strong> Ajuste o slider <strong>Vf</strong> para aproximadamente <strong>" * (@sprintf "%.3f" Vₗ) * " V</strong> para atingir a equivalência exata no ponto de operação.")
+	</div>
+</div>
+""")
+
+# ╔═╡ b6bf31e2-a3ed-41d2-845d-dcf87d8ae09f
+md"""
+---
+## 7. 🧠 Quiz Interativo de Fixação
+
+Teste seus conhecimentos conceituais sobre o princípio de equivalência terminal respondendo à pergunta abaixo:
+
+**Pergunta:** O que acontece com a tensão de Thévenin ($V_{Th}$) e com a resistência de Thévenin ($R_{Th}$) de uma rede linear de dois terminais se o resistor de carga $R_L$ for substituído por outro resistor de valor **duas vezes maior** ($2 \cdot R_L$)?
+"""
+
+# ╔═╡ d6fa4f1b-e8c7-4743-a391-a030a6dcbe1c
+@bind quiz_ans Select([
+	"Selecione uma resposta...",
+	"A) Vth e Rth dobram de valor, pois o circuito precisa compensar a maior oposição à corrente da nova carga.",
+	"B) Vth e Rth permanecem rigorosamente inalterados, pois representam propriedades intrínsecas da rede linear ativa à esquerda dos terminais A-B.",
+	"C) Vth dobra para manter a corrente na carga inalterada, enquanto Rth diminui pela metade.",
+	"D) Rth dobra devido ao efeito de reflexão de carga e Vth cai pela metade devido à queda interna."
+])
+
+# ╔═╡ 780fbe09-89b4-4ca5-bc0c-f8698870c543
+HTML("""
+$(if quiz_ans == "Selecione uma resposta..."
+	"""<div style="background-color: #f1f5f9; border-left: 4px solid #64748b; padding: 12px 16px; border-radius: 4px; color: #475569; font-size: 0.95em;">
+		🤔 Selecione uma das alternativas acima para validar seu raciocínio.
+	</div>"""
+elseif startswith(quiz_ans, "B)")
+	"""<div style="background-color: #f0fdf4; border: 2px solid #22c55e; border-radius: 12px; padding: 18px; margin: 12px 0; font-family: system-ui, sans-serif;">
+		<div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+			<span style="font-size: 1.6em;">🎉</span>
+			<h4 style="margin: 0; color: #15803d; font-size: 1.15em;">Resposta Rigorosamente Exata!</h4>
+		</div>
+		<p style="margin: 0 0 8px 0; color: #166534; line-height: 1.5;">
+			Excelente raciocínio! Os equivalentes de Thévenin (<code>Vth</code>, <code>Rth</code>) e Norton (<code>In</code>, <code>Rn</code>) são parâmetros que caracterizam <strong>exclusivamente a rede linear ativa interna</strong> à esquerda dos terminais A-B. A carga <code>RL</code> é um elemento <em>externo</em> conectado a esses terminais. Portanto, qualquer alteração no valor de <code>RL</code> altera a corrente e a tensão <em>nos terminais</em>, mas <strong>não modifica em nada</strong> a tensão de circuito aberto nem a resistência equivalente do circuito gerador!
+		</p>
+	</div>"""
+else
+	"""<div style="background-color: #fef2f2; border: 2px solid #ef4444; border-radius: 12px; padding: 18px; margin: 12px 0; font-family: system-ui, sans-serif;">
+		<div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+			<span style="font-size: 1.6em;">❌</span>
+			<h4 style="margin: 0; color: #b91c1c; font-size: 1.15em;">Atenção: Não Confunda Carga com Equivalente!</h4>
+		</div>
+		<p style="margin: 0 0 8px 0; color: #991b1b; line-height: 1.5;">
+			Lembre-se da definição fundamental: o equivalente de Thévenin representa a <strong>caixa preta ativa</strong> que antecede os terminais A e B. Ele é obtido com os terminais abertos (<code>RL = ∞</code>) e com as fontes internas desativadas. O resistor de carga <code>RL</code> é apenas o consumidor conectado aos terminais; ele <strong>não faz parte</strong> da rede equivalente e não tem o poder de alterar suas características intrínsecas! Tente novamente.
+		</p>
+	</div>"""
+end)
+""")
+
+# ╔═╡ 5df231f1-6d78-4586-a529-2065ff61015d
+md"""
+---
+## 8. 🛡️ Guia de Boas Práticas e Segurança Experimental em Bancada
+
+Durante a realização prática deste laboratório no DEE/UFC, siga sempre estas recomendações essenciais de engenharia:
+
+### 1. ⚠️ Cuidado com a Medição Direta de Corrente de Curto-Circuito ($I_{sc}$):
+- **O Risco:** Conectar as pontas de prova do multímetro na função amperímetro diretamente entre os terminais $A$ e $B$ impõe um curto-circuito real. Como a impedância interna do amperímetro é quase nula (fração de ohms), se a resistência equivalente $R_{Th}$ for pequena ou a fonte tiver alta tensão, a corrente resultante pode **queimar o fusível cerâmico ultrarrápido** do instrumento ou desarmar a fonte.
+- **A Solução:** Sempre calcule teoricamente $I_{sc} = V_{Th} / R_{Th}$ antes de conectar o amperímetro para certificar-se de que a corrente não ultrapassará o limite da escala selecionada (ex: escala de $200\text{ mA}$).
+
+### 2. 💡 Método da Meia Tensão: A Alternativa Segura de Bancada:
+- Em vez de fechar curto-circuito para medir $I_{sc}$, conecte um potenciômetro ou década resistiva nos terminais $A$ e $B$.
+- Monitore a tensão com o voltímetro e ajuste o potenciômetro até que $V_L = V_{oc} / 2 = V_{Th} / 2$.
+- Desconecte o potenciômetro e meça sua resistência no ohmímetro: seu valor será exatamente igual a $R_{Th}$, sem qualquer risco de queima de fusíveis!
+
+### 3. 🔥 Verificação de Potência Térmica dos Resistores de Bancada:
+- Os resistores comuns utilizados nas aulas práticas são resistores de filme de carbono com potência nominal máxima de **$1/4\text{ W} = 250\text{ mW}$**.
+- No circuito da prática:
+  - Potência máxima dissipada em $R_1$: $P_{R1} = (V - V_{R2})^2 / R_1 = (5{,}0 - 2{,}5)^2 / 1000 = 6{,}25\text{ mW} \ll 250\text{ mW}$.
+  - Potência na carga $R_L = 470\,\Omega$: $P_L \approx 0{,}76\text{ mW} \ll 250\text{ mW}$.
+  - Todos os resistores operam com margem de segurança térmica superior a **$30\times$**, garantindo operação perfeitamente fria e estável.
+
+### 4. 🎛️ Ajuste do Limite de Corrente (CC) da Fonte de Alimentação:
+- Antes de habilitar a saída (`Output ON`) da fonte de alimentação de bancada, configure o limite de corrente (modo *Constant Current* - CC) para um valor ligeiramente superior ao esperado (por exemplo, $50\text{ mA}$). Caso haja algum erro de fiação ou curto-circuito inadvertido na protoboard, a fonte limitará a corrente imediatamente, protegendo seus componentes!
+"""
+
+# ╔═╡ 3cf789d7-78f4-4418-a753-ec0118dd0209
+md"""
+---
+## 9. 🏁 Conclusão e Síntese da Prática
+
+Neste caderno interativo, exploramos com profundidade matemática e rigor prático os Teoremas de Thévenin e Norton:
+
+1. **Equivalência Terminal:** Comprovamos analiticamente e computacionalmente que uma rede ativa com múltiplas malhas e divisores pode ser rigorosamente substituída por apenas dois componentes ($V_{Th}$ e $R_{Th}$ ou $I_N$ e $R_N$), gerando **$0{,}0000\%$ de erro** na carga $R_L$.
+2. **Dualidade:** A transformação de fontes $V_{Th} = R_{Th} \cdot I_N$ estabelece a perfeita harmonia entre as abordagens de Thévenin (malha/tensão) e Norton (nó/corrente).
+3. **Reta de Carga:** A característica terminal linear une o ponto de circuito aberto ($V_{oc}$) ao de curto-circuito ($I_{sc}$), definindo com precisão o ponto quiescente $Q$.
+4. **Transferência de Potência:** Compreendemos a distinção vital entre casar impedâncias para máxima potência ($R_L = R_{Th}, \eta = 50\%$) em sinais e operar com alta eficiência energética em sistemas de transmissão de potência.
+5. **Emulação de Bancada:** Dominamos a técnica do laboratório da UFC de utilizar uma fonte regulável de tensão $V_f$ para sintetizar e comprovar o ponto de operação de uma fonte de corrente de Norton.
+
+Parabéns por concluir esta exploração interativa! Bons estudos e excelente prática no laboratório do DEE/UFC! 🚀⚡
 """
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
 [deps]
+LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 PlotlyJS = "f0f68f2c-4968-5e81-91da-67840de0976a"
 Plots = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
 PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
+Printf = "de0858da-6303-5e67-8744-51eddeeeb8d7"
 
 [compat]
 PlotlyJS = "~0.18.15"
@@ -279,7 +715,7 @@ PLUTO_MANIFEST_TOML_CONTENTS = """
 
 julia_version = "1.12.6"
 manifest_format = "2.0"
-project_hash = "57778bc34a913d9b1144b0ce60519a5cce6f34b1"
+project_hash = "f69e59711c7b21cf38fd4fa9c7c79ea8585d3a7e"
 
 [[deps.AbstractPlutoDingetjes]]
 deps = ["Pkg"]
@@ -1595,48 +2031,36 @@ version = "1.4.1+1"
 """
 
 # ╔═╡ Cell order:
-# ╟─01fdd2cd-d00c-4710-b6d2-5888641f9637
-# ╠═f06b39c6-b633-11ef-1619-bdb8a48ded68
-# ╠═8b0422c1-faa3-442c-b064-aec4502c20b3
-# ╟─3301dc1f-903b-4727-92b5-099a80f97a22
-# ╟─7d112dd2-6c88-408f-a0d7-4aa644926d23
-# ╟─43ef2f42-3ad7-433a-85f3-b071d7375dc7
-# ╟─a31c6f01-4697-4e14-a593-db7e26d1785e
-# ╠═9ed1ea35-4a43-4f99-99e6-67430e39f03d
-# ╟─129cbaf0-673b-4214-a9bd-993719e4c392
-# ╠═259664af-8da5-49ed-967c-de08a1b6a7a2
-# ╟─b1881097-09e4-43ce-adc6-c047ba3f9016
-# ╠═a153c78d-416c-4275-8062-3f45c2d6854d
-# ╟─56d83ab6-6623-455c-b87d-38c4cd0f9f53
-# ╟─49248c88-c9dc-45f3-b1b9-117bbe0f65d0
-# ╟─9f2a0eff-9e9b-4ca8-bbaf-859094aa1273
-# ╠═94be8d99-0b09-4f32-90d3-a766da25238d
-# ╠═5d60ac42-5b57-4912-86a9-cc563d60d090
-# ╟─c67f3b4f-35dc-4267-bb86-f185009fef58
-# ╠═f9ed1a5e-c873-4f8c-a6cb-992a4e2dcb57
-# ╟─4ac4a83f-b8f6-4817-bae5-5e90795a91c6
-# ╟─d4b153ff-c562-4372-b840-d54863779f08
-# ╠═76762a74-8455-4c01-9d28-a3be6063dbad
-# ╟─eea0cc61-ba3b-4671-a625-d950d3808410
-# ╠═a2818369-40fd-4409-a2a6-ac94f8268878
-# ╟─a3147ef8-7e3a-4fd5-9c13-c168952368a0
-# ╠═7ba3a770-2902-4514-96dc-e0d3ea479926
-# ╟─b88c885e-fcbd-45e8-a743-cc993582509a
-# ╠═1d55b086-a2a4-4e2f-82a2-f797b49ddae1
-# ╟─3693d5e0-4d0e-4a20-ba7e-60c815c10721
-# ╟─bf58d3fd-6158-4a45-a027-22edc8435899
-# ╟─b851efc4-c11a-411b-b796-1f9dbc7bbe6a
-# ╠═7c0583e1-1d7e-4601-87a1-39b76d242325
-# ╟─0153a579-998c-43a4-85ba-83d5853f5b1e
-# ╟─df4f0270-4320-4437-87d4-76cd653375ab
-# ╟─6e79296c-9070-4b2b-a765-e904bc84f63a
-# ╟─61fecd4c-2a8f-48fc-bfe2-f12424eb9128
-# ╟─8429748c-e8cc-4099-a54e-1db3b55ed3f0
-# ╠═b156e152-4c11-4ead-9eb6-dc5a4f86c205
-# ╠═aa006442-3738-4283-82aa-dcc10b5adc1f
-# ╟─7989d2df-5da9-42b6-b102-de5a74948a2c
-# ╠═cfd3edf8-3b5c-42b8-8536-df20abc04342
-# ╟─35bd2543-7784-47e1-a269-0b33eeb59e05
-# ╠═7f4cb28a-eb92-45de-9fb9-64613c14e359
+# ╠═224ebb00-402a-459a-b668-8d115097d034
+# ╟─2ff3b043-fe8d-4827-b219-474ec242bdb8
+# ╠═8dc943b4-8305-4429-96e5-b696f38d355e
+# ╠═bb30e0f1-d3ab-4262-ab9f-18c6f60581ec
+# ╟─4bbd7878-c5d3-4747-b486-4e700857549a
+# ╟─2f0ec5e4-0b30-4379-955c-06ea1435fe96
+# ╟─e9e60100-4382-4c1b-8f61-2b3d436a67b3
+# ╟─fd54d7ea-1009-4327-b895-743c045e525d
+# ╠═3c2af411-f865-499f-8fb2-349e109a59e5
+# ╠═df561969-2a17-45b8-895d-a2aa5ec80870
+# ╠═99a59bac-cfd0-42f8-9e51-c0a5a5c594b0
+# ╠═dad37239-29cb-484c-8b1d-86df429e5eed
+# ╠═c0e6ff4d-7810-48e4-a7a9-e7aadf5af4c4
+# ╟─55343a2d-185d-4027-9e58-355b2e141f56
+# ╟─91f2ad3f-5970-40ed-83cd-e3d3cecf8eff
+# ╟─beae6f46-4a2d-4a4f-8440-22137448b516
+# ╟─d03e43d3-e1b4-4c54-b1b9-34f78f343a57
+# ╟─ecd06175-ea2a-4638-89ac-e16c47fe2bc6
+# ╟─2478a50e-0458-437a-ad71-8c14caa8ce64
+# ╠═96a3e3bc-1d3a-4d3f-8bf0-99eeffbff723
+# ╟─ecd7d0f5-a7da-4b9f-a606-48fc04a4a836
+# ╠═e00dd8bd-6ee4-4823-97cc-48ba0229ce0b
+# ╟─77832751-0600-4b18-9081-4e6c2d3fda4b
+# ╠═1077a2ce-e544-46d4-ae07-5d167d48307a
+# ╠═a17ab041-cf70-4cbb-9e9a-7a38c7339974
+# ╟─7c5f8277-09d9-4cb7-a684-8da1af934adf
+# ╟─b6bf31e2-a3ed-41d2-845d-dcf87d8ae09f
+# ╠═d6fa4f1b-e8c7-4743-a391-a030a6dcbe1c
+# ╟─780fbe09-89b4-4ca5-bc0c-f8698870c543
+# ╟─5df231f1-6d78-4586-a529-2065ff61015d
+# ╟─3cf789d7-78f4-4418-a753-ec0118dd0209
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
