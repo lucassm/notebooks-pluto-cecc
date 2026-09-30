@@ -39,15 +39,42 @@ md"""
 
 Seja muito bem-vindo a este **caderno interativo de laboratório**! Este material foi projetado para transformar o estudo da potência elétrica e do casamento de impedâncias em uma experiência dinâmica, visual e matematicamente rigorosa.
 
+---
+
 ### 🎯 Objetivos de Aprendizagem:
+
 1. ⚡ **Teorema de Jacobi (1840):** Compreender física e matematicamente por que uma rede linear ativa transfere a máxima potência possível para uma carga resistiva passiva quando $R_L = R_{Th}$ (ou $R_s$).
+
+---
+
 2. 📐 **Dedução Analítica por Cálculo Diferencial:** Acompanhar o rigor analítico da derivação de primeira ordem ($\frac{d P_L}{d R_L} = 0$) e a confirmação de ponto de máximo global pela derivada de segunda ordem ($\frac{d^2 P_L}{d R_L^2} < 0$).
+
+---
+
 3. ⚖️ **O Grande Dilema da Engenharia (Potência vs Rendimento):** Dominar o trade-off fundamental entre potência útil entregue e rendimento elétrico ($\eta$), entendendo por que o ponto de máxima potência opera com eficiência de **exatamente 50%**.
+
+---
+
 4. 🔌 **Sistemas de Sinal vs Sistemas de Energia:** Distinguir claramente as razões pelas quais telecomunicações, áudio e sensores utilizam casamento de impedâncias ($R_L = R_s$), enquanto redes elétricas de potência (geração, transmissão e distribuição) operam estritamente com $R_{Th} \ll R_L$ para manter o rendimento elevado ($\eta > 95\%$).
+
+---
+
 5. 🧮 **Equacionamento e Resolução Matricial ($A \cdot x = b$):** Resolver um circuito resistivo ativo de múltiplas malhas no Julia (`A \ b`), extrair o equivalente de Thévenin e comprovar que o valor ótimo de carga calculado matricialmente coincide exatamente com $R_{Th}$.
+
+---
+
 6. 📊 **Painel Dinâmico e Cartões Interativos:** Manipular tensões e resistências em tempo real via sliders do PlutoUI, observando a resposta dinâmica da potência, tensão, corrente e rendimento.
+
+---
+
 7. 📈 **Curvas Características Interativas:** Explorar gráficos interativos em Plotly para a curva $P_L(R_L)$, a curva de rendimento $\eta(R_L)$ e a reta de carga terminal.
+
+---
+
 8. 🚀 **Aplicações na Engenharia Moderna:** Analisar estudos de caso práticos (áudio Hi-Fi e *damping factor*, linhas de transmissão de RF, interfaces de sensores e algoritmos MPPT em inversores solares).
+
+---
+
 9. 🛡️ **Segurança Experimental e Boas Práticas de Bancada:** Prevenir danos térmicos em resistores comerciais ($1/4\text{ W}$) e décadas resistivas em ensaios de bancada.
 """
 
@@ -63,13 +90,17 @@ md"""
 ## 1. 🏛️ Fundamentos Teóricos e Contexto Histórico
 
 ### 📜 A História de Moritz von Jacobi e a Propulsão Elétrica (1840)
+
 O Teorema da Máxima Transferência de Potência não nasceu em uma sala de aula abstrata, mas de uma necessidade prática de engenharia no século XIX:
 
 - Em 1838–1840, o físico e engenheiro prussiano radicado na Rússia **Moritz von Jacobi** construiu uma embarcação experimental movida por um motor eletromagnético de sua autoria, navegando pelo rio Neva em São Petersburgo perante a corte do Czar Nicolau I.
+
 - A energia vinha de uma enorme bateria galvânica composta por mais de 300 células de zinco-platina.
+
 - Ao tentar extrair o máximo de trabalho mecânico das pás do barco, Jacobi percebeu que:
   - Se a resistência elétrica das bobinas do motor fosse muito alta, a corrente era insignificante e o barco mal se movia.
   - Se a resistência das bobinas fosse excessivamente baixa, as baterias ferviam e a potência útil no eixo também caía drasticamente.
+
 - Em 1840, Jacobi publicou a formulação matemática do que hoje chamamos de **Lei de Jacobi**: a potência mecânica máxima é transferida da bateria para o motor quando a resistência elétrica interna do motor é **rigorosamente igual** à resistência interna do conjunto de baterias!
 
 ---
@@ -83,14 +114,17 @@ Qualquer rede linear ativa de corrente contínua conectada a uma carga $R_L$ pod
         +--------------/\/\/\-----------------o (+)
         |                                     |
       + |                                     |
-    ( Vs ) Tensão                            [ RL ] Carga Resistiva
+    ( Vs ) Tensão                           [ RL ] Carga Resistiva
       - | de Thévenin                         |      VL, IL, PL
         |                                     |
         +-------------------------------------o (-)
                                               B
 ```
 
+---
+
 ### 📐 Relações Constitutivas Fundamentais:
+
 1. **Corrente no Circuito em Série:**
    $$I = \frac{V_s}{R_s + R_L}$$
 2. **Tensão sobre a Carga $R_L$ (Regra do Divisor de Tensão):**
@@ -107,24 +141,31 @@ md"""
 Considerando que a fonte de excitação possui parâmetros fixos ($V_s$ e $R_s$), queremos encontrar o valor da resistência de carga $R_L \ge 0$ que maximiza a função potência $P_L(R_L)$.
 
 ### 1️⃣ Condição Necessária de Extremo (Derivada de Primeira Ordem):
+
 Aplicando a regra do quociente para derivar $P_L$ em relação a $R_L$:
+
 $$\frac{d P_L}{d R_L} = \frac{d}{d R_L} \left[ \frac{V_s^2 \cdot R_L}{(R_s + R_L)^2} \right]$$
 
 $$= V_s^2 \cdot \frac{1 \cdot (R_s + R_L)^2 - R_L \cdot 2(R_s + R_L)}{(R_s + R_L)^4}$$
 
 Colocando o fator comum $(R_s + R_L)$ em evidência no numerador:
+
 $$= V_s^2 \cdot \frac{(R_s + R_L) \cdot \left[ (R_s + R_L) - 2 R_L \right]}{(R_s + R_L)^4} = V_s^2 \cdot \frac{R_s - R_L}{(R_s + R_L)^3}$$
 
 Igualando a derivada primeira a zero para determinar o ponto crítico:
+
 $$\frac{d P_L}{d R_L} = 0 \iff V_s^2 \cdot \frac{R_s - R_L}{(R_s + R_L)^3} = 0 \implies \mathbf{R_L = R_s}$$
 
 ---
 
 ### 2️⃣ Confirmação de Máximo Global (Derivada de Segunda Ordem):
+
 Para certificar que o ponto crítico encontrado é inequivocamente um **máximo** (e não um mínimo ou ponto de inflexão), calculamos a derivada segunda:
+
 $$\frac{d^2 P_L}{d R_L^2} = \frac{d}{d R_L} \left[ V_s^2 \frac{R_s - R_L}{(R_s + R_L)^3} \right] = V_s^2 \cdot \frac{2 R_L - 4 R_s}{(R_s + R_L)^4}$$
 
 Avaliando no ponto crítico $R_L = R_s$:
+
 $$\left.\frac{d^2 P_L}{d R_L^2}\right|_{R_L = R_s} = V_s^2 \cdot \frac{2 R_s - 4 R_s}{(2 R_s)^4} = -\frac{2 R_s V_s^2}{16 R_s^4} = -\frac{V_s^2}{8 R_s^3} < 0$$
 
 Como a segunda derivada é estritamente negativa para quaisquer $V_s > 0$ e $R_s > 0$, o ponto crítico $R_L = R_s$ é comprovadamente um **máximo global único**!
@@ -132,7 +173,9 @@ Como a segunda derivada é estritamente negativa para quaisquer $V_s > 0$ e $R_s
 ---
 
 ### 3️⃣ Valor da Potência Máxima Transferida:
+
 Substituindo $R_L = R_s$ na expressão da potência:
+
 $$P_{L,\text{max}} = \frac{V_s^2 \cdot R_s}{(R_s + R_s)^2} = \frac{V_s^2 \cdot R_s}{(2 R_s)^2} = \frac{V_s^2 \cdot R_s}{4 R_s^2} = \mathbf{\frac{V_s^2}{4 R_s}}$$
 
 !!! warning "💡 Pergunta Sagaz: E se a carga $R_L$ for fixa e pudermos escolher a resistência interna $R_s$ da fonte?"
@@ -150,25 +193,41 @@ md"""
 Muitos estudantes de engenharia confundem **potência máxima** com **eficiência máxima**. Trata-se de dois conceitos completamente distintos!
 
 ### 📊 Balanço Completo de Potências do Circuito:
+
 1. **Potência Total Gerada pela Fonte Ideal ($P_{\text{total}}$):**
-   $$P_{\text{total}} = V_s \cdot I = I^2 \cdot (R_s + R_L) = \frac{V_s^2}{R_s + R_L}$$
+
+$$P_{\text{total}} = V_s \cdot I = I^2 \cdot (R_s + R_L) = \frac{V_s^2}{R_s + R_L}$$
+
 2. **Potência Dissipada Internamente na Fonte ($P_s$ - Perda Joule na Resistência Interna):**
-   $$P_s = I^2 \cdot R_s = \frac{V_s^2 \cdot R_s}{(R_s + R_L)^2}$$
+
+$$P_s = I^2 \cdot R_s = \frac{V_s^2 \cdot R_s}{(R_s + R_L)^2}$$
+
 3. **Potência Útil Transferida para a Carga ($P_L$):**
-   $$P_L = I^2 \cdot R_L = \frac{V_s^2 \cdot R_L}{(R_s + R_L)^2}$$
-   *Conservação da Energia:* $P_{\text{total}} = P_s + P_L$
+
+
+$$P_L = I^2 \cdot R_L = \frac{V_s^2 \cdot R_L}{(R_s + R_L)^2}$$
+
+*Conservação da Energia:* $P_{\text{total}} = P_s + P_L$
 
 ---
 
 ### 📈 Rendimento Elétrico ($\eta$):
+
 O rendimento elétrico percentual representa a fração da potência total gerada que é efetivamente entregue à carga:
+
 $$\eta = \frac{P_{\text{útil}}}{P_{\text{total}}} \times 100\% = \frac{I^2 \cdot R_L}{I^2 \cdot (R_s + R_L)} \times 100\% = \left(\frac{R_L}{R_s + R_L}\right) \times 100\% = \left(\frac{1}{1 + \frac{R_s}{R_L}}\right) \times 100\%$$
 
 ### ⚠️ O Limite Insuperável dos 50%:
+
 No ponto de máxima transferência de potência ($R_L = R_s$):
+
 $$\eta_{\text{Pmax}} = \frac{R_s}{R_s + R_s} \times 100\% = \frac{R_s}{2 R_s} \times 100\% = \mathbf{50{,}0\%}$$
 
+---
+
 > **Conclusão Crucial:** Quando um circuito opera em máxima transferência de potência, **exatamente metade de toda a energia elétrica produzida é desperdiçada** como calor dentro da própria fonte ($P_s = P_L = P_{L,\text{max}}$)!
+
+---
 """
 
 # ╔═╡ de285a08-381e-4eb8-8753-c5a12e7a066a
@@ -405,6 +464,7 @@ No laboratório, a carga $R_L$ raramente é conectada a uma fonte ideal com um �
 
 Como determinar o resistor de carga ótimo para uma rede complexa?
 Basta determinar a **Resistência de Thévenin ($R_{Th}$)** vista dos terminais da carga:
+
 $$R_{L,\text{ótimo}} = R_{Th}$$
 
 Vamos comprovar isso analisando um circuito com duas malhas ativas montado na bancada didática:
@@ -414,7 +474,7 @@ Vamos comprovar isso analisando um circuito com duas malhas ativas montado na ba
         +-------/\/\/\-------+-------/\/\/\-------+---------o (+)
         |                    |                    |
       + |                    |                    |
-    ( V ) 24 V             [ R2 ] 100 Ω         [ RL ] Carga Variável
+      ( V ) 24 V           [ R2 ] 100 Ω         [ RL ] Carga Variável
       - |                    |                    |
         |                    |                    |
         +--------------------+--------------------+---------o (-)
@@ -422,7 +482,9 @@ Vamos comprovar isso analisando um circuito com duas malhas ativas montado na ba
 ```
 
 ### 📐 Sistema de Equações de Malha ($A \cdot x = b$):
+
 Definindo $i_1$ para a malha esquerda e $i_2$ para a malha direita:
+
 - **Malha 1:** $(R_1 + R_2) i_1 - R_2 i_2 = V$
 - **Malha 2:** $-R_2 i_1 + (R_2 + R_3 + R_L) i_2 = 0$
 
@@ -450,12 +512,18 @@ V \\
 A corrente na carga é $i_L = i_2 = x[2]$, e a potência na carga é $P_L = R_L \cdot i_L^2$.
 
 ### ⚡ Equivalente de Thévenin Analítico:
+
 - **Tensão de Thévenin:** Divisor de tensão com $R_L = \infty$:
-  $$V_{Th} = V \cdot \left(\frac{R_2}{R_1 + R_2}\right) = 24 \cdot \left(\frac{100}{100 + 100}\right) = \mathbf{12{,}0\text{ V}}$$
+  
+$$V_{Th} = V \cdot \left(\frac{R_2}{R_1 + R_2}\right) = 24 \cdot \left(\frac{100}{100 + 100}\right) = \mathbf{12{,}0\text{ V}}$$
+
 - **Resistência de Thévenin:** Desativando a fonte $V$ (curto-circuito):
-  $$R_{Th} = R_3 + (R_1 \parallel R_2) = 50 + \frac{100 \cdot 100}{100 + 100} = 50 + 50 = \mathbf{100{,}0\,\Omega}$$
+
+$$R_{Th} = R_3 + (R_1 \parallel R_2) = 50 + \frac{100 \cdot 100}{100 + 100} = 50 + 50 = \mathbf{100{,}0\,\Omega}$$
+
 - **Potência Máxima Teórica Prevista por Jacobi:**
-  $$P_{L,\text{max}} = \frac{V_{Th}^2}{4 R_{Th}} = \frac{12^2}{4 \cdot 100} = \frac{144}{400} = \mathbf{0{,}360\text{ W}} = 360{,}0\text{ mW}$$
+
+$$P_{L,\text{max}} = \frac{V_{Th}^2}{4 R_{Th}} = \frac{12^2}{4 \cdot 100} = \frac{144}{400} = \mathbf{0{,}360\text{ W}} = 360{,}0\text{ mW}$$
 """
 
 # ╔═╡ 1180f732-be57-432a-bc5f-418ceff06f0d
@@ -2051,12 +2119,12 @@ version = "1.4.1+1"
 # ╟─77575528-1442-44dc-a2ae-82f95b5e947c
 # ╠═1180f732-be57-432a-bc5f-418ceff06f0d
 # ╠═42de632b-19cf-42fe-89d1-e347b411059f
-# ╠═7448aae5-9e22-489e-947e-619e07d42bae
+# ╟─7448aae5-9e22-489e-947e-619e07d42bae
 # ╟─b61b9edd-3629-44a8-85b7-c3a094f5fa5c
 # ╠═efbfd020-d999-4749-b07d-df856f7de547
 # ╟─8435b95d-9631-4651-bec0-3a0bd3675bc1
 # ╟─89412374-331d-4fa2-ad15-05a3a9cab825
-# ╠═f33099ba-2bc2-41f5-aa73-bbfffa80ad9a
+# ╟─f33099ba-2bc2-41f5-aa73-bbfffa80ad9a
 # ╟─00d484db-8f67-4b71-8520-f21af766361f
 # ╟─75468301-47a1-4b52-8aad-c1a5f1b9215e
 # ╟─754f6c54-d920-468e-8a01-39b7fe0b6b5a
